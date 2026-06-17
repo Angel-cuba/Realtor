@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@realtor/domain": ["../../packages/domain/src"],
+      "@realtor/domain/*": ["../../packages/domain/src/*"],
+      "@realtor/db": ["../../packages/db/src"],
+      "@realtor/db/*": ["../../packages/db/src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
