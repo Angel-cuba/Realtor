@@ -1,0 +1,8 @@
+import { type VercelConfig } from "@vercel/config/v1";
+
+export const config: VercelConfig = {
+  framework: "nextjs",
+  buildCommand: "npm run build --workspace @realtor/web",
+  installCommand: "npm ci",
+  outputDirectory: "apps/web/.next"
+};
