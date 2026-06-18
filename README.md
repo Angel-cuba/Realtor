@@ -18,8 +18,8 @@ Monorepo for a premium real estate platform covering web, mobile, shared domain 
 | S1a — Search filtering | ✅ Shipped |
 | S1b — Clerk auth | ✅ Shipped |
 | S2 — Agent dashboard | ✅ Shipped |
-| S3 — Listings from DB | ⏳ In progress |
-| S4 — Image upload | ⏳ Pending |
+| S3 — Listings from DB | ✅ Shipped |
+| S4 — Image upload | ⏳ In progress |
 | S5 — Lead status management | ⏳ Pending |
 
 ## Local setup
@@ -62,7 +62,7 @@ Required integrations:
 ```bash
 npm run db:generate  # regenerate Drizzle migrations
 npm run db:studio    # open Drizzle Studio
-npm run db:seed      # seed DB with fixture listings (after S3)
+npm run db:seed      # seed DB with 6 fixture listings (idempotent, safe to re-run)
 ```
 
 **Important:** `DATABASE_URL` must use the Supabase transaction pooler (port 6543), not the direct connection (port 5432). Direct connections time out from local machines.
