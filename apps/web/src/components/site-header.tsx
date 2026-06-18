@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Building2, Menu, UserRound } from "lucide-react";
+import { Building2, Menu } from "lucide-react";
+import { AuthNav } from "@/components/auth-nav";
 
 export function SiteHeader() {
   return (
@@ -26,9 +27,7 @@ export function SiteHeader() {
           >
             Publicar propiedad
           </Link>
-          <Link className="grid h-10 w-10 place-items-center rounded bg-ink text-white" href="/dashboard">
-            <UserRound size={18} aria-label="Cuenta" />
-          </Link>
+          <AuthNav />
           <button className="grid h-10 w-10 place-items-center rounded border border-black/15 md:hidden" type="button">
             <Menu size={18} aria-label="Menu" />
           </button>
