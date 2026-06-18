@@ -131,7 +131,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { createUploadthing, UploadThingError, type FileRouter } from "uploadthing/next";
 import { z } from "zod";
 import { db, propertyMedia } from "@realtor/db";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { generateReactHelpers } from "@uploadthing/react";
 
 const f = createUploadthing();
@@ -145,35 +145,25 @@ export const ourFileRouter = {
       return { userId: user.id, listingId: input.listingId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // Remove placeholder rows (url = '') before inserting real media
-      // Get current max sortOrder for this listing
+      // Delete placeholder rows (url = '') so the real image takes sortOrder 0
+      await db
+        .delete(propertyMedia)
+        .where(and(eq(propertyMedia.listingId, metadata.listingId), eq(propertyMedia.url, "")));
+
+      // Count remaining real rows to determine sortOrder for new image
       const existing = await db
-        .select({ sortOrder: propertyMedia.sortOrder })
+        .select({ id: propertyMedia.id })
         .from(propertyMedia)
-        .where(eq(propertyMedia.listingId, metadata.listingId))
-        .orderBy(asc(propertyMedia.sortOrder));
+        .where(eq(propertyMedia.listingId, metadata.listingId));
 
-      const hasPlaceholder = existing.length === 1 && existing[0].sortOrder === 0;
-      const nextOrder = hasPlaceholder ? 0 : existing.length;
+      await db.insert(propertyMedia).values({
+        listingId: metadata.listingId,
+        url: file.url,
+        alt: file.name,
+        sortOrder: existing.length
+      });
 
-      if (hasPlaceholder) {
-        // Replace the empty placeholder with the real image
-        await db
-          .update(propertyMedia)
-          .set({ url: file.ufsUrl, alt: file.name })
-          .where(
-            eq(propertyMedia.listingId, metadata.listingId)
-          );
-      } else {
-        await db.insert(propertyMedia).values({
-          listingId: metadata.listingId,
-          url: file.ufsUrl,
-          alt: file.name,
-          sortOrder: nextOrder
-        });
-      }
-
-      return { url: file.ufsUrl };
+      return { url: file.url };
     }),
 } satisfies FileRouter;
 
@@ -209,7 +199,7 @@ The dashboard page layout is at `apps/web/src/app/dashboard/page.tsx`. Add a nav
 **Step 4 — Verify end-to-end**
 
 1. Upload an image via the dashboard
-2. Check `property_media` in Supabase: the URL should be a `ufs.sh` or `utfs.io` domain
+2. Check `property_media` in Supabase: the URL should be a `ufs.sh` CDN domain
 3. Visit `/comprar` — the property card should now show the real image instead of the placeholder icon
 4. Visit the property detail page — main image slot renders the photo
 

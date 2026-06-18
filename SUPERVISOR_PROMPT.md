@@ -116,10 +116,10 @@ curl http://localhost:3000/api/uploadthing   # 200
 # Upload UI must be accessible (requires login — verify in browser)
 # After uploading an image for a listing:
 # Supabase MCP: SELECT url FROM property_media WHERE url != '' LIMIT 5;
-# Expect: rows with ufs.sh or utfs.io URLs
+# Expect: rows with ufs.sh CDN URLs
 
 # After upload, the card should show the real image:
-curl http://localhost:3000/comprar   # check HTML for img src containing ufs.sh or utfs.io
+curl http://localhost:3000/comprar   # check HTML for img src containing ufs.sh
 ```
 
 Also verify:
@@ -196,7 +196,7 @@ Never include AI tool attribution. Never `--no-verify`.
 > - `apps/web/src/app/dashboard/upload/page.tsx` — upload UI: listing selector + `UploadButton`/`UploadDropzone`
 >
 > **Key implementation detail — placeholder rows:**
-> The seed created one `property_media` row per listing with `url: ""` and `sortOrder: 0`. `listings.ts` uses the first media row as the cover image. When the first photo is uploaded, the `onUploadComplete` handler should UPDATE the empty row instead of inserting at sortOrder 0 (which would leave the empty row as cover). Subsequent uploads INSERT at incrementing sortOrders.
+> The seed created one `property_media` row per listing with `url: ""` and `sortOrder: 0`. `listings.ts` uses the first media row as the cover image. The `onUploadComplete` handler must DELETE any rows where `url = ''` for that listing before inserting the real image at `sortOrder = 0`. Subsequent uploads INSERT at `sortOrder = count of existing rows`. This avoids overwriting real photos on later uploads (a `hasPlaceholder` heuristic based on sortOrder alone would corrupt existing images).
 >
 > **Auth:** The `listingImageUploader` middleware must call `currentUser()` from `@clerk/nextjs/server` and throw `UploadThingError("Unauthorized")` if null. The upload page is already protected by the Clerk middleware.
 >
