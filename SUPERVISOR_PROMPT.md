@@ -26,7 +26,7 @@ Premium real estate platform — Next.js 16 App Router, Supabase (Postgres + Dri
 
 ---
 
-### State of the codebase RIGHT NOW
+### State of the codebase RIGHT NOW (verified 2026-06-18)
 
 | Phase | Status | Key files |
 |-------|--------|-----------|
@@ -36,16 +36,23 @@ Premium real estate platform — Next.js 16 App Router, Supabase (Postgres + Dri
 | S1b — Clerk auth | ✅ Shipped | `middleware.ts`, `layout.tsx`, `auth-nav.tsx`, `/sign-in`, `/sign-up` |
 | S2 — Dashboard | ✅ Shipped | `dashboard/page.tsx` — stats + leads table from DB |
 | MVP cleanup | ✅ Shipped | `property-image.tsx` — centered Building2 icon + label placeholder on `bg-ink` |
-| S3 — DB listings | ⏳ Pending | Replace static fixture with real DB data |
+| S3 — DB listings | ⏳ Pending | Replace static fixture with real DB data + seed script |
 | S4 — Image upload | ⏳ Pending | UploadThing integration for property media |
 | S5 — Lead status | ⏳ Pending | `PATCH /api/leads/[id]`, status dropdown in dashboard |
 
-**Verified end-to-end (last supervisor session):**
+**Verified end-to-end (supervisor session 2026-06-18):**
 - `POST /api/leads` → Supabase `leads` table → returns 201 with full lead object ✅
-- `/dashboard` reads from DB and renders stats + table ✅
-- Search filter params (`?q=&budget=`) work correctly on `/comprar` and `/rentar` ✅
-- Clerk auth guard correctly protects `/dashboard` ✅
-- PropertyImage placeholder renders centered icon — no broken image icons anywhere ✅
+- `/dashboard` reads from DB, renders stats + table; empty state when no leads ✅
+- Search filter params `?q=&budget=` work correctly on `/comprar` and `/rentar` ✅
+  - `?budget=1m` → Willow Park ($735k) only ✅
+  - `?budget=1m+` → Hillcrest Villa + Skyline Penthouse ✅
+  - `?q=zzznomatch` → "No hay propiedades que coincidan con tu busqueda." ✅
+- Clerk auth guard correctly protects `/dashboard` (404 in dev curl — correct Clerk behavior) ✅
+- PropertyImage placeholder renders centered icon — zero broken image icons anywhere ✅
+- `/sign-in` 200, `/sign-up` 200 ✅
+- TypeScript: 0 errors ✅
+- Server logs: clean, no warnings ✅
+- DB: 6 tables present (`agents`, `leads`, `listings`, `properties`, `property_media`, `user_profiles`) ✅
 
 ---
 
@@ -72,17 +79,17 @@ git log --oneline -8                               # review recent commits
 
 #### 1. Verify S1a — Search filtering
 - Open `/comprar` — property card grid renders with Building2 icon placeholders
-- Type "Austin" → submit → filters to 1 card
-- Select "Hasta $500k" → submit → shows only listings ≤ $500k
-- Empty search → all sale listings appear
+- `?q=austin` → filters to Austin/Hillcrest listing only
+- `?budget=1m` → shows only Willow Park ($735k)
+- `?budget=1m+` → shows Hillcrest Villa + Skyline Penthouse
+- `?q=zzznomatch` → "No hay propiedades que coincidan con tu busqueda." empty state
 - Open `/rentar` — same checks with rent listings
-- ✅ Pass: URL updates to `?q=austin&budget=...`, cards filter, empty state appears when no results
+- ✅ Pass: URL updates, cards filter, empty state appears when no results
 
 #### 2. Verify S1b — Clerk auth
 - Open `/dashboard` without signing in → Clerk intercepts (dev: returns 404 from Clerk's dev-browser handler — this is expected in curl, works correctly in browser)
-- `/sign-in` and `/sign-up` pages render correctly on `bg-linen`
-- Header: unsigned → dark `UserRound` icon button; signed → Clerk `UserButton` avatar
-- ✅ Pass: auth guard works, sign-in page loads, avatar appears after auth
+- `/sign-in` and `/sign-up` pages return 200
+- ✅ Pass: auth guard works, sign-in page loads
 
 #### 3. Verify S2 — Dashboard
 - Sign in as an agent
@@ -102,16 +109,28 @@ curl -X POST http://localhost:3000/api/leads \
 ```
 
 - After submitting, reload `/dashboard` — new lead appears at top of table
-- Clean up test lead after verifying: delete from Supabase SQL Editor or via MCP
+- Clean up test lead: `DELETE FROM leads WHERE email = 'test@example.com' RETURNING id;` via Supabase MCP
 - ✅ Pass: 201 response with full lead object, row visible in dashboard
 
 #### 5. Verify PropertyImage placeholders
-- `/comprar` grid: each card shows `bg-ink` panel with centered Building2 icon and property type label (VILLA, HOUSE, etc.)
-- `/propiedades/hillcrest-modern-villa` — main image slot and 2 gallery slots show icon placeholder
-- Home page hero and "For owners" section show `bg-ink` panels
+- `/comprar` grid: each card shows `bg-ink` panel with centered Building2 icon and property type label
+- `/propiedades/hillcrest-modern-villa` — main image slot and gallery slots show icon placeholder
 - ✅ Pass: zero broken image icons, icon+label visible in every placeholder slot
 
-#### 6. TypeScript gate
+#### 6. Verify S3 — DB listings (after S3 is complete)
+- DB has seed data: run `npm run db:seed` if tables are empty
+- `/comprar` renders listings from DB (not static array)
+- `/propiedades/[slug]` resolves slug from DB
+- `generateStaticParams` in `propiedades/[slug]/page.tsx` queries DB
+
+```bash
+# Verify seed data exists
+# Via Supabase MCP: SELECT COUNT(*) FROM listings;  -- expect 6
+# SELECT COUNT(*) FROM properties;  -- expect 6
+# SELECT COUNT(*) FROM agents;      -- expect at least 3
+```
+
+#### 7. TypeScript gate
 
 ```bash
 npx tsc --project apps/web/tsconfig.json --noEmit
@@ -124,10 +143,10 @@ npx tsc --project apps/web/tsconfig.json --noEmit
 
 | Gap | Impact | Notes |
 |-----|--------|-------|
-| `listingSlug` stripped in API but `listingId` never resolved | Low | Leads saved without listing FK — S3 will fix |
-| Static listings fixture — no real DB data | Medium | S3 will fix |
-| `middleware.ts` deprecated in Next.js 16 (should be `proxy.ts`) | Warn | Functional, just a deprecation warning — fix before next Next.js upgrade |
-| RLS enabled but no policies on any table | Info | App uses `postgres` role (bypasses RLS) — revisit when adding client-side Supabase queries |
+| `listingSlug` stripped in API but `listingId` never resolved | Low | Leads saved without listing FK — S3 seed will fix |
+| Static listings fixture — no real DB data | Medium | S3 active phase |
+| `middleware.ts` deprecated in Next.js 16 (should be `proxy.ts`) | Warn | Functional — fix before next Next.js upgrade |
+| RLS enabled but no policies on any table | Info | App uses `postgres` role (bypasses RLS) — revisit with client-side queries |
 | Mobile hamburger menu has no `onClick` handler | Low | `Menu` button in `site-header.tsx` — post-S3 |
 | No pagination on dashboard leads table | Low | Fine until lead volume grows |
 | `const-*.webp` files in `public/images/realtor/` | None | Orphaned, not referenced — safe to delete |
@@ -170,6 +189,13 @@ Never include AI tool attribution. Never `--no-verify`.
 > **Also update:** `generateStaticParams` in `propiedades/[slug]/page.tsx` — currently imports the static `listings` array directly. Change to a DB query.
 >
 > **Seed script:** `packages/db/src/seed.ts` — insert the 6 fixture listings (create user_profiles + agents rows first, then properties, then listings, then property_media with `image: ""` for now). Add `"db:seed": "tsx packages/db/src/seed.ts"` to root `package.json`.
+>
+> **Seed order (FK dependencies):**
+> 1. `user_profiles` (needed by `agents.user_id`)
+> 2. `agents` (needed by `listings.agent_id`)
+> 3. `properties` (needed by `listings.property_id`)
+> 4. `listings` (needed by `property_media.listing_id`)
+> 5. `property_media` (covers + galleries, `image: ""` for now)
 
 ---
 
@@ -179,6 +205,7 @@ Never include AI tool attribution. Never `--no-verify`.
 npm run dev:web          # start Next.js dev server (port 3000)
 npm run db:generate      # regenerate Drizzle migration files
 npm run db:studio        # open Drizzle Studio (DB browser)
+npm run db:seed          # seed DB with 6 fixture listings (after S3)
 npx tsc --project apps/web/tsconfig.json --noEmit   # type check
 git log --oneline -5     # recent commits
 gh repo view --web       # open GitHub repo

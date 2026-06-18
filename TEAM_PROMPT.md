@@ -92,7 +92,7 @@ DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west
 
 ---
 
-### Active phases — what to build next
+### Active phase — what to build NOW
 
 #### S3 — Listings from database
 
@@ -100,22 +100,31 @@ DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west
 
 **Acceptance criteria:**
 - `apps/web/src/lib/listings.ts` still exports the same helper functions (`getListingsByType`, `getListingBySlug`, `getFeaturedListings`, `filterListings`) but queries the DB instead of a static array
-- `generateStaticParams` in `propiedades/[slug]/page.tsx` also updates to query DB (currently uses the static `listings` array directly)
+- `generateStaticParams` in `propiedades/[slug]/page.tsx` also updates to query DB (currently imports the static `listings` array directly — change to a DB call)
 - The `PropertyListing` type in `@realtor/domain` matches what the DB returns (or create a mapper)
-- A seed script exists at `packages/db/src/seed.ts` with the 6 fixture listings as rows (properties + listings + agents + property_media)
+- A seed script exists at `packages/db/src/seed.ts` with the 6 fixture listings as rows
 - `package.json` at root gets `"db:seed": "tsx packages/db/src/seed.ts"`
 
 **Schema to join:**
 - `listings` → `properties` (inner join on `property_id`)
 - `listings` → `agents` (left join on `agent_id`)
-- `property_media` → filtered by `listing_id`, ordered by `sort_order ASC` — first row is the cover image
+- `property_media` → filtered by `listing_id`, ordered by `sort_order ASC` — first row is the cover image; rest are gallery
+
+**Seed order (FK dependencies):**
+1. `user_profiles` (required by `agents.user_id`)
+2. `agents` (required by `listings.agent_id`)
+3. `properties` (required by `listings.property_id`)
+4. `listings` (required by `property_media.listing_id`)
+5. `property_media` (`image: ""` for now — S4 adds UploadThing)
 
 **Notes:**
 - Server components can call DB directly (no API route needed for reads)
-- `filterListings` can keep filtering in memory after the DB fetch, or add WHERE clauses — either is fine
-- `property_media` rows populate the `image` and `gallery` fields on `PropertyListing`
+- `filterListings` can keep filtering in memory after the DB fetch, or add WHERE clauses — either is fine for now
+- Run `npm run db:seed` after writing the script to verify rows appear in Supabase
 
 ---
+
+### Upcoming phases (build after S3)
 
 #### S4 — Property image upload (UploadThing)
 
