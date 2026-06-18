@@ -66,7 +66,7 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 | S1a | ✅ Done | `SearchPanel` client component filters by city text + budget, pushes URL params |
 | S1b | ✅ Done | Clerk middleware protects `/dashboard`, `ClerkProvider` in layout, `AuthNav` in header |
 | S2 | ✅ Done | `/dashboard` page fetches leads from Supabase, shows stats + table |
-| MVP-cleanup | ✅ Done | `PropertyImage` component with `bg-ink` placeholder, all `const-*.webp` paths cleared |
+| MVP-cleanup | ✅ Done | `PropertyImage` placeholder (icon + label centered on `bg-ink`), all broken image paths cleared |
 
 **Key files:**
 - `apps/web/src/app/page.tsx` — home page
@@ -74,9 +74,21 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 - `apps/web/src/app/rentar/page.tsx` — rent listings
 - `apps/web/src/app/propiedades/[slug]/page.tsx` — property detail + lead form
 - `apps/web/src/app/dashboard/page.tsx` — protected agent dashboard (leads table)
-- `apps/web/src/components/property-image.tsx` — shows `bg-ink` placeholder when `src` is empty
-- `apps/web/src/lib/listings.ts` — static fixture (all `image: ""`, `gallery: []`)
+- `apps/web/src/app/api/leads/route.ts` — POST endpoint, validates with Zod, inserts to DB, returns 500 on error
+- `apps/web/src/components/property-image.tsx` — shows centered Building2 icon placeholder when `src` is empty
+- `apps/web/src/lib/listings.ts` — static fixture (all `image: ""`, `gallery: []`) — **S3 replaces this**
 - `apps/web/src/middleware.ts` — Clerk middleware, protects `/dashboard`
+
+---
+
+### ⚠️ Critical env var note
+
+`DATABASE_URL` **must** use the Supabase **transaction pooler** (port 6543), not the direct connection (port 5432). Direct connections time out from local machines due to IPv6 routing.
+
+```
+# Correct format (get exact URL from Supabase Dashboard → Settings → Database → Transaction pooler):
+DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
+```
 
 ---
 
@@ -84,20 +96,24 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 
 #### S3 — Listings from database
 
-**Goal:** Replace the static fixture in `apps/web/src/lib/listings.ts` with real data from the `listings` + `properties` + `agents` tables in Supabase.
+**Goal:** Replace the static fixture in `apps/web/src/lib/listings.ts` with real data from the `listings` + `properties` + `agents` + `property_media` tables in Supabase.
 
 **Acceptance criteria:**
-- `GET /api/listings` returns published listings (join `listings` + `properties` + `agents`)
 - `apps/web/src/lib/listings.ts` still exports the same helper functions (`getListingsByType`, `getListingBySlug`, `getFeaturedListings`, `filterListings`) but queries the DB instead of a static array
-- `generateStaticParams` in the detail page falls back gracefully if DB is unavailable during build
-- The `PropertyListing` type in `@realtor/domain` matches what the DB returns
-- An admin seed script exists at `packages/db/src/seed.ts` with at least the 6 existing fixture listings as rows
+- `generateStaticParams` in `propiedades/[slug]/page.tsx` also updates to query DB (currently uses the static `listings` array directly)
+- The `PropertyListing` type in `@realtor/domain` matches what the DB returns (or create a mapper)
+- A seed script exists at `packages/db/src/seed.ts` with the 6 fixture listings as rows (properties + listings + agents + property_media)
+- `package.json` at root gets `"db:seed": "tsx packages/db/src/seed.ts"`
+
+**Schema to join:**
+- `listings` → `properties` (inner join on `property_id`)
+- `listings` → `agents` (left join on `agent_id`)
+- `property_media` → filtered by `listing_id`, ordered by `sort_order ASC` — first row is the cover image
 
 **Notes:**
-- The DB schema has `listings`, `properties`, `agents`, `property_media` tables — join them for a full listing object
-- Use `db.select().from(listings).innerJoin(...)` with Drizzle
 - Server components can call DB directly (no API route needed for reads)
-- `property_media` replaces the `image`/`gallery` fields; the first media row is the cover
+- `filterListings` can keep filtering in memory after the DB fetch, or add WHERE clauses — either is fine
+- `property_media` rows populate the `image` and `gallery` fields on `PropertyListing`
 
 ---
 
@@ -106,11 +122,11 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 **Goal:** Agents can upload photos for a listing from the dashboard.
 
 **Acceptance criteria:**
-- `UPLOADTHING_TOKEN` env var is configured (already in `.env.example`)
+- `UPLOADTHING_TOKEN` env var configured (already in `.env.example`)
 - `apps/web/src/app/api/uploadthing/route.ts` exposes the UploadThing handler
-- Dashboard has a simple upload UI for property media (attach to a listing by slug/id)
-- Uploaded URLs are saved to `property_media` table
-- `PropertyImage` renders the real URL when present
+- Dashboard has a simple upload UI (attach to a listing by slug/id)
+- Uploaded URLs saved to `property_media` table
+- `PropertyImage` renders real URLs when present (placeholder stays for empty `src`)
 
 ---
 
@@ -120,9 +136,8 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 
 **Acceptance criteria:**
 - Each lead row has a status dropdown (`new → contacted → qualified → tour_scheduled → ...`)
-- Status updates go through a `PATCH /api/leads/[id]` route
-- Optimistic UI update (no full page reload)
-- Only authenticated users (Clerk) can update leads
+- Status updates through a `PATCH /api/leads/[id]` route (validate with Zod, auth-guard with Clerk)
+- Optimistic UI update — no full page reload
 
 ---
 
@@ -135,17 +150,18 @@ nvm use   # reads .nvmrc → 24.16.0
 # 2. Install dependencies
 npm install
 
-# 3. Configure environment — copy and fill in all values
+# 3. Configure environment
 cp .env.example apps/web/.env.local
+# Fill in all values — especially DATABASE_URL with the pooler URL (port 6543)
 
 # 4. Start dev server
-npm run dev:web   # http://localhost:3000 (or 3001)
+npm run dev:web   # http://localhost:3000
 
-# 5. TypeScript check
+# 5. TypeScript check (must be zero errors before any commit)
 npx tsc --project apps/web/tsconfig.json --noEmit
 ```
 
-**Required env vars to fill (in `apps/web/.env.local`):**
+**Required env vars (`apps/web/.env.local`):**
 ```
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
 CLERK_SECRET_KEY=sk_...
@@ -153,7 +169,7 @@ NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
-DATABASE_URL=postgresql://...  (Supabase transaction pooler URL, port 6543)
+DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
 ```
 
 ---
@@ -163,8 +179,8 @@ DATABASE_URL=postgresql://...  (Supabase transaction pooler URL, port 6543)
 1. **No comments** unless the WHY is non-obvious (hidden constraint, workaround).
 2. **No unused imports** — TypeScript strict mode catches them; fix before committing.
 3. **Server components by default** — only add `"use client"` when needed (event handlers, hooks, browser APIs).
-4. **Next.js 15+ params** — `params` and `searchParams` are `Promise<...>` — always `async`/`await` them.
-5. **Placeholders** — use `PropertyImage` with `src=""` for missing images (never import sample images).
+4. **Next.js 16 params** — `params` and `searchParams` are `Promise<...>` — always `async`/`await` them.
+5. **Placeholders** — use `PropertyImage` with `src=""` for missing images (never import local image files).
 6. **DB queries** — always use the `db` client from `@realtor/db`; never raw SQL strings.
 7. **Zod validation** — all API route inputs must go through a Zod schema before touching the DB.
 

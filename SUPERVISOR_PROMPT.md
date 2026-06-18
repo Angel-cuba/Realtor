@@ -35,65 +35,84 @@ Premium real estate platform — Next.js 16 App Router, Supabase (Postgres + Dri
 | S1a — Search | ✅ Shipped | `search-panel.tsx` (client), `comprar/`, `rentar/` filter by `?q=&budget=` |
 | S1b — Clerk auth | ✅ Shipped | `middleware.ts`, `layout.tsx`, `auth-nav.tsx`, `/sign-in`, `/sign-up` |
 | S2 — Dashboard | ✅ Shipped | `dashboard/page.tsx` — stats + leads table from DB |
-| MVP cleanup | ✅ Shipped | `property-image.tsx` placeholder, all `const-*.webp` paths cleared |
+| MVP cleanup | ✅ Shipped | `property-image.tsx` — centered Building2 icon + label placeholder on `bg-ink` |
 | S3 — DB listings | ⏳ Pending | Replace static fixture with real DB data |
 | S4 — Image upload | ⏳ Pending | UploadThing integration for property media |
 | S5 — Lead status | ⏳ Pending | `PATCH /api/leads/[id]`, status dropdown in dashboard |
+
+**Verified end-to-end (last supervisor session):**
+- `POST /api/leads` → Supabase `leads` table → returns 201 with full lead object ✅
+- `/dashboard` reads from DB and renders stats + table ✅
+- Search filter params (`?q=&budget=`) work correctly on `/comprar` and `/rentar` ✅
+- Clerk auth guard correctly protects `/dashboard` ✅
+- PropertyImage placeholder renders centered icon — no broken image icons anywhere ✅
+
+---
+
+### ⚠️ Infrastructure note
+
+`DATABASE_URL` must use the Supabase **transaction pooler** (port **6543**), not direct connection (port 5432). Direct connections time out from local machines due to IPv6.
+
+```
+DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
+```
 
 ---
 
 ### Your verification checklist (run in order)
 
 #### 0. Environment
+
 ```bash
-nvm use                                          # must resolve to 24.16.0
+nvm use                                            # must resolve to 24.16.0
 npx tsc --project apps/web/tsconfig.json --noEmit  # must be zero errors
-git status                                       # must be clean
-git log --oneline -8                             # review recent commits
+git status                                         # must be clean
+git log --oneline -8                               # review recent commits
 ```
 
 #### 1. Verify S1a — Search filtering
-- Open `/comprar` in browser — does the grid of property cards render?
-- Type "Austin" in the location input and submit — does the result filter to 1 card?
-- Select "Hasta $500k" budget and submit — does it filter correctly?
-- Submit with no filters — do all sale listings appear?
+- Open `/comprar` — property card grid renders with Building2 icon placeholders
+- Type "Austin" → submit → filters to 1 card
+- Select "Hasta $500k" → submit → shows only listings ≤ $500k
+- Empty search → all sale listings appear
 - Open `/rentar` — same checks with rent listings
-- ✅ Pass: URL updates to `?q=austin&budget=...`, cards filter, empty state message appears when no results
+- ✅ Pass: URL updates to `?q=austin&budget=...`, cards filter, empty state appears when no results
 
 #### 2. Verify S1b — Clerk auth
-- Open `/dashboard` without signing in — must redirect to `/sign-in`
-- `/sign-in` page renders Clerk's `<SignIn />` component (centered, `bg-linen` background)
-- `/sign-up` page renders Clerk's `<SignUp />` component
-- Header user icon: before sign-in shows a dark button; after sign-in shows Clerk `UserButton` avatar
-- ✅ Pass: unauthenticated redirect works, sign-in page loads, `UserButton` appears after auth
+- Open `/dashboard` without signing in → Clerk intercepts (dev: returns 404 from Clerk's dev-browser handler — this is expected in curl, works correctly in browser)
+- `/sign-in` and `/sign-up` pages render correctly on `bg-linen`
+- Header: unsigned → dark `UserRound` icon button; signed → Clerk `UserButton` avatar
+- ✅ Pass: auth guard works, sign-in page loads, avatar appears after auth
 
 #### 3. Verify S2 — Dashboard
 - Sign in as an agent
-- `/dashboard` loads: shows "Hola, [firstName]" or "Panel de agente"
-- Stats row shows total, new, and qualified/tour counts
-- If leads exist in DB: table renders with name, email, intent badge, status badge, score, date
-- If no leads: "Aun no hay leads registrados." empty state shows
-- ✅ Pass: page loads without 500 error, data reflects actual DB state
+- `/dashboard` shows "Hola, [firstName]" or "Panel de agente"
+- Stats row shows total leads, nuevos, calificados/tour counts from DB
+- Leads table renders with name, email, intent badge, status badge, score, date
+- If no leads: "Aun no hay leads registrados." empty state
+- ✅ Pass: page loads, data reflects actual DB state
 
-#### 4. Verify Lead form → DB pipeline
+#### 4. Verify lead form → DB pipeline
+
 ```bash
-# Submit a test lead via curl
 curl -X POST http://localhost:3000/api/leads \
   -H "Content-Type: application/json" \
   -d '{"name":"Test User","email":"test@example.com","intent":"buy","message":"Looking for a 3-bed house in Austin"}'
-# Expect: 201 with { lead: { id, name, email, ... } }
+# Expect: 201 with { lead: { id, name, email, intent, status, score, createdAt, ... } }
 ```
-- After submitting, reload `/dashboard` — new lead appears at the top of the table
-- ✅ Pass: row appears in DB, dashboard reflects it
+
+- After submitting, reload `/dashboard` — new lead appears at top of table
+- Clean up test lead after verifying: delete from Supabase SQL Editor or via MCP
+- ✅ Pass: 201 response with full lead object, row visible in dashboard
 
 #### 5. Verify PropertyImage placeholders
-- Open any property card — dark `bg-ink` placeholder must render (no broken image icons)
-- Open `/propiedades/hillcrest-modern-villa` — main image slot and 2 gallery slots all show dark placeholders
-- Home page hero: dark `bg-ink` panel with the metrics card overlay — no image
-- Home page "For owners" section: dark `bg-ink` block — no image
-- ✅ Pass: zero broken image icons across all routes
+- `/comprar` grid: each card shows `bg-ink` panel with centered Building2 icon and property type label (VILLA, HOUSE, etc.)
+- `/propiedades/hillcrest-modern-villa` — main image slot and 2 gallery slots show icon placeholder
+- Home page hero and "For owners" section show `bg-ink` panels
+- ✅ Pass: zero broken image icons, icon+label visible in every placeholder slot
 
-#### 6. TypeScript + lint gate
+#### 6. TypeScript gate
+
 ```bash
 npx tsc --project apps/web/tsconfig.json --noEmit
 # Must return 0 errors before any commit
@@ -101,15 +120,17 @@ npx tsc --project apps/web/tsconfig.json --noEmit
 
 ---
 
-### Known gaps (acceptable for now, log as issues)
+### Known gaps (acceptable, log as issues)
 
 | Gap | Impact | Notes |
 |-----|--------|-------|
-| `listingSlug` is stripped in API route but `listingId` is never resolved | Low | Leads saved without listing FK — acceptable until S3 |
-| Static listings fixture — no real DB data | Medium | S3 will fix this |
-| `const-*.webp` files still in `public/images/realtor/` | None | Orphaned, not referenced — delete when confirmed safe |
+| `listingSlug` stripped in API but `listingId` never resolved | Low | Leads saved without listing FK — S3 will fix |
+| Static listings fixture — no real DB data | Medium | S3 will fix |
+| `middleware.ts` deprecated in Next.js 16 (should be `proxy.ts`) | Warn | Functional, just a deprecation warning — fix before next Next.js upgrade |
+| RLS enabled but no policies on any table | Info | App uses `postgres` role (bypasses RLS) — revisit when adding client-side Supabase queries |
+| Mobile hamburger menu has no `onClick` handler | Low | `Menu` button in `site-header.tsx` — post-S3 |
 | No pagination on dashboard leads table | Low | Fine until lead volume grows |
-| Mobile hamburger menu is non-functional | Low | `Menu` button has no onClick handler |
+| `const-*.webp` files in `public/images/realtor/` | None | Orphaned, not referenced — safe to delete |
 
 ---
 
@@ -119,8 +140,8 @@ npx tsc --project apps/web/tsconfig.json --noEmit
 |-----------|--------|
 | TypeScript errors present | Block commit, fix first |
 | Unused imports or dead code | Fix inline, then commit |
-| Team completes a full phase | You review checklist, then commit + push |
-| Small fix (1–3 lines) | Commit yourself immediately |
+| Team completes a full phase | Review checklist, then commit + push |
+| Small fix (1–3 lines) | Commit immediately |
 | New feature > 50 lines | Review diff, confirm checklist passes, then commit |
 | Breaking change to `@realtor/domain` or `@realtor/db` | Require type check on full monorepo first |
 
@@ -134,30 +155,28 @@ Never include AI tool attribution. Never `--no-verify`.
 
 ---
 
-### Starting S3 — what to tell the next developer
-
-When you're ready to start S3, use this brief:
+### Starting S3 — brief for the next developer
 
 > **S3 goal:** Replace `apps/web/src/lib/listings.ts` static fixture with real DB queries.
 >
-> Schema: `listings` → joins `properties` + `agents` + `property_media`. The cover image is the `property_media` row with lowest `sort_order`.
+> **Schema joins:** `listings` + `properties` (inner) + `agents` (left) + `property_media` (separate query, order by `sort_order ASC`). First media row = cover image.
 >
-> The helper function signatures must stay identical so no page components break:
-> - `getListingsByType(type)` — now queries DB
-> - `getListingBySlug(slug)` — now queries DB
-> - `getFeaturedListings()` — returns first 4 published listings
-> - `filterListings(items, params)` — filter in memory after fetching, or add WHERE clauses
+> **Function signatures must stay identical** — all page components call these directly:
+> - `getListingsByType(type)` — query DB, filter by `listing_type`
+> - `getListingBySlug(slug)` — query DB, match by `slug`
+> - `getFeaturedListings()` — first 4 published listings
+> - `filterListings(items, params)` — keep in-memory filtering or add WHERE clauses
 >
-> Also create `packages/db/src/seed.ts` that inserts the 6 fixture listings so staging has data.
+> **Also update:** `generateStaticParams` in `propiedades/[slug]/page.tsx` — currently imports the static `listings` array directly. Change to a DB query.
 >
-> Add the seed script to `package.json`: `"db:seed": "tsx packages/db/src/seed.ts"`
+> **Seed script:** `packages/db/src/seed.ts` — insert the 6 fixture listings (create user_profiles + agents rows first, then properties, then listings, then property_media with `image: ""` for now). Add `"db:seed": "tsx packages/db/src/seed.ts"` to root `package.json`.
 
 ---
 
 ### Quick reference
 
 ```bash
-npm run dev:web          # start Next.js dev server
+npm run dev:web          # start Next.js dev server (port 3000)
 npm run db:generate      # regenerate Drizzle migration files
 npm run db:studio        # open Drizzle Studio (DB browser)
 npx tsc --project apps/web/tsconfig.json --noEmit   # type check
@@ -165,4 +184,5 @@ git log --oneline -5     # recent commits
 gh repo view --web       # open GitHub repo
 ```
 
-**Supabase note:** Direct connections from local machine may time out (IPv6 issue). Use the transaction pooler URL (port 6543) in `DATABASE_URL`. If `db:migrate` hangs, run the SQL from `packages/db/drizzle/` manually in the Supabase SQL Editor.
+**Supabase project:** `xbwxjtxkmanphogltrok` (realtorweb, eu-west-1, ACTIVE_HEALTHY)
+**Supabase note:** Always use the transaction pooler URL (port 6543). Direct connections (port 5432) time out from local machines.
