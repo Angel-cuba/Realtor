@@ -13,10 +13,16 @@ export async function POST(request: Request) {
   const { listingSlug, ...data } = parsed.data;
   const score = listingSlug ? 55 : 35;
 
-  const [lead] = await db
-    .insert(leads)
-    .values({ ...data, score })
-    .returning();
+  let lead;
+  try {
+    [lead] = await db
+      .insert(leads)
+      .values({ ...data, score })
+      .returning();
+  } catch (err) {
+    console.error("[api/leads] DB insert failed:", err);
+    return NextResponse.json({ error: "DB error" }, { status: 500 });
+  }
 
   return NextResponse.json({ lead }, { status: 201 });
 }
