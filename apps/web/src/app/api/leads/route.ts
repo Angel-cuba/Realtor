@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { leadInputSchema } from "@realtor/domain";
+import { db, leads } from "@realtor/db";
 
 export async function POST(request: Request) {
   const payload = await request.json();
@@ -9,13 +10,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid lead payload", issues: parsed.error.flatten() }, { status: 400 });
   }
 
-  const lead = {
-    ...parsed.data,
-    id: crypto.randomUUID(),
-    status: "new",
-    score: parsed.data.listingSlug ? 55 : 35,
-    createdAt: new Date().toISOString()
-  };
+  const { listingSlug, ...data } = parsed.data;
+  const score = listingSlug ? 55 : 35;
+
+  const [lead] = await db
+    .insert(leads)
+    .values({ ...data, score })
+    .returning();
 
   return NextResponse.json({ lead }, { status: 201 });
 }
