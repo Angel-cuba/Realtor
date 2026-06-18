@@ -5,13 +5,15 @@ import {
   db,
   listings as listingsTable,
   properties,
-  propertyMedia
+  propertyMedia,
+  userProfiles
 } from "@realtor/db";
 
 type ListingRow = {
   listing: typeof listingsTable.$inferSelect;
   property: typeof properties.$inferSelect;
   agent: typeof agents.$inferSelect | null;
+  profile: typeof userProfiles.$inferSelect | null;
 };
 
 async function getMediaByListingId(listingIds: string[]) {
@@ -34,7 +36,7 @@ async function getMediaByListingId(listingIds: string[]) {
 async function mapListingRows(rows: ListingRow[]) {
   const mediaByListing = await getMediaByListingId(rows.map((row) => row.listing.id));
 
-  return rows.map(({ agent, listing, property }): PropertyListing => {
+  return rows.map(({ agent, listing, profile, property }): PropertyListing => {
     const media = mediaByListing.get(listing.id) ?? [];
 
     return {
@@ -55,12 +57,7 @@ async function mapListingRows(rows: ListingRow[]) {
       image: media[0] ?? "",
       gallery: media.slice(1),
       tags: listing.tags,
-      agentName: agent?.slug
-        ? agent.slug
-            .split("-")
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(" ")
-        : "Realtor advisor",
+      agentName: profile?.displayName ?? "Realtor advisor",
       agentTitle: agent?.title ?? "Property advisor",
       description: listing.summary,
       highlights: listing.highlights
@@ -73,11 +70,13 @@ export async function getListingsByType(type: "sale" | "rent") {
     .select({
       listing: listingsTable,
       property: properties,
-      agent: agents
+      agent: agents,
+      profile: userProfiles
     })
     .from(listingsTable)
     .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
     .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+    .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
     .where(and(eq(listingsTable.listingType, type), eq(listingsTable.status, "published")))
     .orderBy(asc(listingsTable.publishedAt), asc(listingsTable.slug));
 
@@ -89,11 +88,13 @@ export async function getListingBySlug(slug: string) {
     .select({
       listing: listingsTable,
       property: properties,
-      agent: agents
+      agent: agents,
+      profile: userProfiles
     })
     .from(listingsTable)
     .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
     .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+    .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
     .where(eq(listingsTable.slug, slug))
     .limit(1);
 
@@ -106,11 +107,13 @@ export async function getFeaturedListings() {
     .select({
       listing: listingsTable,
       property: properties,
-      agent: agents
+      agent: agents,
+      profile: userProfiles
     })
     .from(listingsTable)
     .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
     .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+    .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
     .where(eq(listingsTable.status, "published"))
     .orderBy(asc(listingsTable.publishedAt), asc(listingsTable.slug))
     .limit(4);
