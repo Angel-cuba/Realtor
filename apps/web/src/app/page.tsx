@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, BarChart3, CalendarDays, Home, KeyRound } from "lucide-react";
 import { PropertyCard } from "@/components/property-card";
@@ -35,14 +34,6 @@ export default function HomePage() {
           </div>
 
           <div className="relative min-h-[520px] overflow-hidden rounded bg-ink">
-            <Image
-              src="/images/realtor/const-11.webp"
-              alt="Modern premium home interior"
-              fill
-              priority
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover opacity-85"
-            />
             <div className="absolute bottom-5 left-5 right-5 grid gap-4 rounded bg-white/92 p-5 backdrop-blur sm:grid-cols-3">
               {metrics.map((metric) => (
                 <div key={metric.label}>
@@ -100,15 +91,7 @@ export default function HomePage() {
 
       <section className="bg-linen py-16" id="sell">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:px-8">
-          <div className="relative min-h-[420px] overflow-hidden rounded">
-            <Image
-              src="/images/realtor/const-1.webp"
-              alt="Premium residential property"
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-          </div>
+          <div className="relative min-h-[420px] overflow-hidden rounded bg-ink" />
           <div className="flex flex-col justify-center">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">For owners</p>
             <h2 className="mt-3 text-4xl font-semibold leading-tight">Vende o renta con una estrategia que mide demanda real.</h2>
