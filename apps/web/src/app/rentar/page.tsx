@@ -8,7 +8,7 @@ export default async function RentPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const listings = filterListings(getListingsByType("rent"), params);
+  const listings = filterListings(await getListingsByType("rent"), params);
   const q = (params.q as string | undefined) ?? "";
   const budget = (params.budget as string | undefined) ?? "";
 

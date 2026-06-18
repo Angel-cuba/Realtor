@@ -3,15 +3,16 @@ import { Bath, BedDouble, CalendarDays, Heart, MapPin, Share2, Square } from "lu
 import { formatMoney, listingTypeLabel, propertyTypeLabel } from "@realtor/domain";
 import { LeadForm } from "@/components/lead-form";
 import { PropertyImage } from "@/components/property-image";
-import { getListingBySlug, listings } from "@/lib/listings";
+import { getListingBySlug, getPublishedListingSlugs } from "@/lib/listings";
 
-export function generateStaticParams() {
-  return listings.map((listing) => ({ slug: listing.slug }));
+export async function generateStaticParams() {
+  const slugs = await getPublishedListingSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const listing = getListingBySlug(slug);
+  const listing = await getListingBySlug(slug);
 
   if (!listing) return {};
 
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const listing = getListingBySlug(slug);
+  const listing = await getListingBySlug(slug);
 
   if (!listing) notFound();
 

@@ -1,6 +1,7 @@
 import {
   boolean,
   integer,
+  json,
   numeric,
   pgEnum,
   pgTable,
@@ -91,7 +92,9 @@ export const listings = pgTable("listings", {
   price: integer("price").notNull(),
   currency: text("currency").notNull().default("USD"),
   summary: text("summary").notNull(),
-  publishedAt: timestamp("published_at", { withTimezone: true })
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  tags: json("tags").$type<string[]>().notNull(),
+  highlights: json("highlights").$type<string[]>().notNull()
 });
 
 export const propertyMedia = pgTable("property_media", {
