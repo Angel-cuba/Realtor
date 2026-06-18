@@ -154,3 +154,27 @@ export function getListingBySlug(slug: string) {
 export function getFeaturedListings() {
   return listings.slice(0, 4);
 }
+
+export function filterListings(
+  items: PropertyListing[],
+  params: Record<string, string | string[] | undefined>
+) {
+  let result = items;
+
+  const q = (params.q as string | undefined)?.toLowerCase().trim();
+  if (q) {
+    result = result.filter(
+      (l) =>
+        l.city.toLowerCase().includes(q) ||
+        l.neighborhood.toLowerCase().includes(q) ||
+        l.addressSummary.toLowerCase().includes(q)
+    );
+  }
+
+  const budget = params.budget as string | undefined;
+  if (budget === "500k") result = result.filter((l) => l.price <= 500_000);
+  if (budget === "1m") result = result.filter((l) => l.price > 500_000 && l.price <= 1_000_000);
+  if (budget === "1m+") result = result.filter((l) => l.price > 1_000_000);
+
+  return result;
+}
