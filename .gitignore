@@ -18,3 +18,4 @@ coverage/
 .aider*
 .idea/
 .vscode/
+.claude/
