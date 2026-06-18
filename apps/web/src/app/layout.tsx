@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
@@ -10,11 +11,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>
-        <SiteHeader />
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body>
+          <SiteHeader />
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
