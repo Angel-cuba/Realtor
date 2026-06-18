@@ -1,50 +1,59 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Bath, BedDouble, CalendarDays, Heart, MapPin, Share2, Square } from "lucide-react";
 import { formatMoney, listingTypeLabel, propertyTypeLabel } from "@realtor/domain";
 import { LeadForm } from "@/components/lead-form";
+import { PropertyImage } from "@/components/property-image";
 import { getListingBySlug, listings } from "@/lib/listings";
 
 export function generateStaticParams() {
   return listings.map((listing) => ({ slug: listing.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
-  const listing = getListingBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const listing = getListingBySlug(slug);
 
-  if (!listing) {
-    return {};
-  }
+  if (!listing) return {};
 
   return {
     title: `${listing.title} | Realtor`,
     description: listing.description,
-    openGraph: {
-      images: [listing.image]
-    }
+    ...(listing.image ? { openGraph: { images: [listing.image] } } : {})
   };
 }
 
-export default function PropertyDetailPage({ params }: { params: { slug: string } }) {
-  const listing = getListingBySlug(params.slug);
+export default async function PropertyDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const listing = getListingBySlug(slug);
 
-  if (!listing) {
-    notFound();
-  }
+  if (!listing) notFound();
 
   const priceSuffix = listing.listingType === "rent" ? "/mo" : "";
+  const gallerySlots = [listing.image, ...(listing.gallery ?? [])].slice(0, 3);
 
   return (
     <main className="bg-linen">
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="relative min-h-[420px] overflow-hidden rounded bg-black/5">
-            <Image src={listing.image} alt={listing.title} fill priority sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover" />
+            <PropertyImage
+              src={gallerySlots[0] ?? ""}
+              alt={listing.title}
+              label={propertyTypeLabel(listing.propertyType)}
+              priority
+              sizes="(min-width: 1024px) 60vw, 100vw"
+              className="object-cover"
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            {listing.gallery.slice(1, 3).map((image) => (
-              <div className="relative min-h-[200px] overflow-hidden rounded bg-black/5" key={image}>
-                <Image src={image} alt={listing.title} fill sizes="(min-width: 1024px) 35vw, 50vw" className="object-cover" />
+            {[1, 2].map((i) => (
+              <div className="relative min-h-[200px] overflow-hidden rounded bg-black/5" key={i}>
+                <PropertyImage
+                  src={gallerySlots[i] ?? ""}
+                  alt={listing.title}
+                  sizes="(min-width: 1024px) 35vw, 50vw"
+                  className="object-cover"
+                />
               </div>
             ))}
           </div>

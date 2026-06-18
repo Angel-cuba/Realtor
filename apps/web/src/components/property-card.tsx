@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Bath, BedDouble, Heart, MapPin, Share2, Square } from "lucide-react";
 import { formatMoney, listingTypeLabel, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
+import { PropertyImage } from "@/components/property-image";
 
 export function PropertyCard({ listing }: { listing: PropertyListing }) {
   const priceSuffix = listing.listingType === "rent" ? "/mo" : "";
@@ -9,10 +9,10 @@ export function PropertyCard({ listing }: { listing: PropertyListing }) {
   return (
     <article className="overflow-hidden rounded border border-black/10 bg-white">
       <Link className="relative block aspect-[4/3] overflow-hidden bg-black/5" href={`/propiedades/${listing.slug}`}>
-        <Image
+        <PropertyImage
           src={listing.image}
           alt={listing.title}
-          fill
+          label={propertyTypeLabel(listing.propertyType)}
           sizes="(min-width: 1024px) 33vw, 100vw"
           className="object-cover transition duration-500 hover:scale-105"
         />
