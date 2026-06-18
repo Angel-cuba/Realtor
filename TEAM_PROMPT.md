@@ -25,14 +25,14 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 │   └── mobile/       — React Native (not active yet)
 ├── packages/
 │   ├── domain/       — Shared TypeScript types + Zod schemas + formatters
-│   └── db/           — Drizzle ORM schema, client, migrations
+│   └── db/           — Drizzle ORM schema, client, seed script
 ├── drizzle.config.ts — Drizzle-kit config (reads apps/web/.env.local)
 └── .env.example      — All required environment variables
 ```
 
 **Key workspace packages:**
 - `@realtor/domain` — `PropertyListing` type, `leadInputSchema`, `formatMoney`, label helpers
-- `@realtor/db` — `db` Drizzle client, all table exports (`leads`, `listings`, `agents`, etc.)
+- `@realtor/db` — `db` Drizzle client, all table exports (`leads`, `listings`, `agents`, `propertyMedia`, etc.)
 
 ---
 
@@ -41,11 +41,12 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 | Layer | Tech | Version |
 |-------|------|---------|
 | Framework | Next.js App Router | 16.2.9 |
-| Language | TypeScript (strict) | 5.x |
+| Language | TypeScript (strict) | 6.x |
 | Styling | Tailwind CSS | — |
 | Auth | Clerk | 7.5.3 |
-| ORM | Drizzle ORM | — |
+| ORM | Drizzle ORM | 0.45.x |
 | Database | Supabase (Postgres) | — |
+| Media upload | UploadThing | v7 |
 | Monorepo | Turborepo + npm workspaces | — |
 | Node | 24.16.0 (`.nvmrc`) | — |
 
@@ -61,22 +62,25 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 
 | Phase | Status | What it does |
 |-------|--------|-------------|
-| S0 | ✅ Done | Monorepo scaffold, domain package, UI components, listings fixture, lead form |
+| S0 | ✅ Done | Monorepo scaffold, domain package, UI components, lead form |
 | S0+ | ✅ Done | Drizzle + Supabase wired, `leads` table in DB, `POST /api/leads` persists rows |
 | S1a | ✅ Done | `SearchPanel` client component filters by city text + budget, pushes URL params |
 | S1b | ✅ Done | Clerk middleware protects `/dashboard`, `ClerkProvider` in layout, `AuthNav` in header |
 | S2 | ✅ Done | `/dashboard` page fetches leads from Supabase, shows stats + table |
 | MVP-cleanup | ✅ Done | `PropertyImage` placeholder (icon + label centered on `bg-ink`), all broken image paths cleared |
+| S3 | ✅ Done | `listings.ts` replaced with Drizzle queries; seed script inserts 6 listings with agents, properties, and media |
 
 **Key files:**
-- `apps/web/src/app/page.tsx` — home page
+- `apps/web/src/app/page.tsx` — home page (async, `getFeaturedListings()` from DB)
 - `apps/web/src/app/comprar/page.tsx` — buy listings (server component, reads `searchParams`)
 - `apps/web/src/app/rentar/page.tsx` — rent listings
-- `apps/web/src/app/propiedades/[slug]/page.tsx` — property detail + lead form
+- `apps/web/src/app/propiedades/[slug]/page.tsx` — property detail + lead form; `generateStaticParams` queries DB
 - `apps/web/src/app/dashboard/page.tsx` — protected agent dashboard (leads table)
-- `apps/web/src/app/api/leads/route.ts` — POST endpoint, validates with Zod, inserts to DB, returns 500 on error
-- `apps/web/src/components/property-image.tsx` — shows centered Building2 icon placeholder when `src` is empty
-- `apps/web/src/lib/listings.ts` — static fixture (all `image: ""`, `gallery: []`) — **S3 replaces this**
+- `apps/web/src/app/api/leads/route.ts` — POST endpoint, validates with Zod, inserts to DB
+- `apps/web/src/components/property-image.tsx` — shows centered Building2 icon placeholder when `src` is empty; renders real URL when present — **no changes needed for S4**
+- `apps/web/src/lib/listings.ts` — Drizzle queries (joins listings + properties + agents + user_profiles + property_media)
+- `packages/db/src/schema.ts` — full DB schema including `propertyMedia` table
+- `packages/db/src/seed.ts` — seeds 6 listings idempotently (`onConflictDoNothing`)
 - `apps/web/src/middleware.ts` — Clerk middleware, protects `/dashboard`
 
 ---
@@ -86,7 +90,6 @@ A premium real estate web platform (monorepo) for buying, renting, and selling p
 `DATABASE_URL` **must** use the Supabase **transaction pooler** (port 6543), not the direct connection (port 5432). Direct connections time out from local machines due to IPv6 routing.
 
 ```
-# Correct format (get exact URL from Supabase Dashboard → Settings → Database → Transaction pooler):
 DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
 ```
 
@@ -94,50 +97,135 @@ DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west
 
 ### Active phase — what to build NOW
 
-#### S3 — Listings from database
-
-**Goal:** Replace the static fixture in `apps/web/src/lib/listings.ts` with real data from the `listings` + `properties` + `agents` + `property_media` tables in Supabase.
-
-**Acceptance criteria:**
-- `apps/web/src/lib/listings.ts` still exports the same helper functions (`getListingsByType`, `getListingBySlug`, `getFeaturedListings`, `filterListings`) but queries the DB instead of a static array
-- `generateStaticParams` in `propiedades/[slug]/page.tsx` also updates to query DB (currently imports the static `listings` array directly — change to a DB call)
-- The `PropertyListing` type in `@realtor/domain` matches what the DB returns (or create a mapper)
-- A seed script exists at `packages/db/src/seed.ts` with the 6 fixture listings as rows
-- `package.json` at root gets `"db:seed": "tsx packages/db/src/seed.ts"`
-
-**Schema to join:**
-- `listings` → `properties` (inner join on `property_id`)
-- `listings` → `agents` (left join on `agent_id`)
-- `property_media` → filtered by `listing_id`, ordered by `sort_order ASC` — first row is the cover image; rest are gallery
-
-**Seed order (FK dependencies):**
-1. `user_profiles` (required by `agents.user_id`)
-2. `agents` (required by `listings.agent_id`)
-3. `properties` (required by `listings.property_id`)
-4. `listings` (required by `property_media.listing_id`)
-5. `property_media` (`image: ""` for now — S4 adds UploadThing)
-
-**Notes:**
-- Server components can call DB directly (no API route needed for reads)
-- `filterListings` can keep filtering in memory after the DB fetch, or add WHERE clauses — either is fine for now
-- Run `npm run db:seed` after writing the script to verify rows appear in Supabase
-
----
-
-### Upcoming phases (build after S3)
-
 #### S4 — Property image upload (UploadThing)
 
-**Goal:** Agents can upload photos for a listing from the dashboard.
+**Goal:** Agents can upload photos for a listing from the dashboard. Uploaded images are stored in `property_media` and rendered immediately on listing cards and detail pages.
 
-**Acceptance criteria:**
-- `UPLOADTHING_TOKEN` env var configured (already in `.env.example`)
-- `apps/web/src/app/api/uploadthing/route.ts` exposes the UploadThing handler
-- Dashboard has a simple upload UI (attach to a listing by slug/id)
-- Uploaded URLs saved to `property_media` table
-- `PropertyImage` renders real URLs when present (placeholder stays for empty `src`)
+**`UPLOADTHING_TOKEN` is already in `apps/web/.env.local`** — do not change or add it.
 
 ---
+
+**Step 1 — Install UploadThing in `apps/web`**
+
+```bash
+npm install uploadthing @uploadthing/react --workspace @realtor/web
+```
+
+---
+
+**Step 2 — Create the file router**
+
+`apps/web/src/app/api/uploadthing/route.ts`:
+
+```typescript
+import { createRouteHandler } from "uploadthing/next";
+import { ourFileRouter } from "@/lib/uploadthing";
+
+export const { GET, POST } = createRouteHandler({ router: ourFileRouter });
+```
+
+`apps/web/src/lib/uploadthing.ts`:
+
+```typescript
+import { currentUser } from "@clerk/nextjs/server";
+import { createUploadthing, UploadThingError, type FileRouter } from "uploadthing/next";
+import { z } from "zod";
+import { db, propertyMedia } from "@realtor/db";
+import { asc, eq, sql } from "drizzle-orm";
+import { generateReactHelpers } from "@uploadthing/react";
+
+const f = createUploadthing();
+
+export const ourFileRouter = {
+  listingImageUploader: f({ image: { maxFileSize: "8MB", maxFileCount: 10 } })
+    .input(z.object({ listingId: z.string().uuid() }))
+    .middleware(async ({ input }) => {
+      const user = await currentUser();
+      if (!user) throw new UploadThingError("Unauthorized");
+      return { userId: user.id, listingId: input.listingId };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // Remove placeholder rows (url = '') before inserting real media
+      // Get current max sortOrder for this listing
+      const existing = await db
+        .select({ sortOrder: propertyMedia.sortOrder })
+        .from(propertyMedia)
+        .where(eq(propertyMedia.listingId, metadata.listingId))
+        .orderBy(asc(propertyMedia.sortOrder));
+
+      const hasPlaceholder = existing.length === 1 && existing[0].sortOrder === 0;
+      const nextOrder = hasPlaceholder ? 0 : existing.length;
+
+      if (hasPlaceholder) {
+        // Replace the empty placeholder with the real image
+        await db
+          .update(propertyMedia)
+          .set({ url: file.ufsUrl, alt: file.name })
+          .where(
+            eq(propertyMedia.listingId, metadata.listingId)
+          );
+      } else {
+        await db.insert(propertyMedia).values({
+          listingId: metadata.listingId,
+          url: file.ufsUrl,
+          alt: file.name,
+          sortOrder: nextOrder
+        });
+      }
+
+      return { url: file.ufsUrl };
+    }),
+} satisfies FileRouter;
+
+export type OurFileRouter = typeof ourFileRouter;
+
+export const { useUploadThing, UploadButton, UploadDropzone } =
+  generateReactHelpers<OurFileRouter>();
+```
+
+**Notes on the placeholder-replacement logic:**
+- The seed script creates one `property_media` row per listing with `url: ""` and `sortOrder: 0`
+- When the first real image is uploaded, we UPDATE that row instead of inserting a new one at sortOrder 0 (so the card image slot renders correctly)
+- Subsequent uploads INSERT new rows at incrementing sortOrders
+
+---
+
+**Step 3 — Create the upload UI in the dashboard**
+
+Add a new page at `apps/web/src/app/dashboard/upload/page.tsx` (Clerk-protected via middleware already).
+
+The page should:
+1. Fetch all published listings from the DB: `id`, `slug`, `title`
+2. Render a form with a listing `<select>` and an upload component
+3. On listing change, show existing photos for that listing
+4. On upload, trigger UploadThing with `input: { listingId }` and refresh
+
+Use the generated `UploadButton` or `UploadDropzone` (both are client components — mark the upload section `"use client"`).
+
+The dashboard page layout is at `apps/web/src/app/dashboard/page.tsx`. Add a nav link to the upload page from there (or add it to the site header for authenticated users — your call).
+
+---
+
+**Step 4 — Verify end-to-end**
+
+1. Upload an image via the dashboard
+2. Check `property_media` in Supabase: the URL should be a `ufs.sh` or `utfs.io` domain
+3. Visit `/comprar` — the property card should now show the real image instead of the placeholder icon
+4. Visit the property detail page — main image slot renders the photo
+
+---
+
+**Acceptance criteria:**
+- [ ] `npm install` completes without errors
+- [ ] `GET /api/uploadthing` returns 200 (UploadThing health)
+- [ ] Upload UI accessible at `/dashboard/upload` (requires login)
+- [ ] Uploading an image for a listing stores a real URL in `property_media.url`
+- [ ] `/comprar` and `/propiedades/[slug]` render the real photo (no placeholder icon for uploaded listings)
+- [ ] TypeScript: `npx tsc --project apps/web/tsconfig.json --noEmit` returns 0 errors
+
+---
+
+### Upcoming phases (build after S4)
 
 #### S5 — Lead status management in dashboard
 
@@ -159,12 +247,11 @@ nvm use   # reads .nvmrc → 24.16.0
 # 2. Install dependencies
 npm install
 
-# 3. Configure environment
-cp .env.example apps/web/.env.local
-# Fill in all values — especially DATABASE_URL with the pooler URL (port 6543)
-
-# 4. Start dev server
+# 3. Start dev server
 npm run dev:web   # http://localhost:3000
+
+# 4. Seed DB (idempotent — safe to re-run)
+npm run db:seed
 
 # 5. TypeScript check (must be zero errors before any commit)
 npx tsc --project apps/web/tsconfig.json --noEmit
@@ -179,6 +266,7 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
 DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
+UPLOADTHING_TOKEN=...
 ```
 
 ---
@@ -187,9 +275,9 @@ DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west
 
 1. **No comments** unless the WHY is non-obvious (hidden constraint, workaround).
 2. **No unused imports** — TypeScript strict mode catches them; fix before committing.
-3. **Server components by default** — only add `"use client"` when needed (event handlers, hooks, browser APIs).
+3. **Server components by default** — only add `"use client"` when needed (event handlers, hooks, browser APIs). The upload zone must be a client component.
 4. **Next.js 16 params** — `params` and `searchParams` are `Promise<...>` — always `async`/`await` them.
-5. **Placeholders** — use `PropertyImage` with `src=""` for missing images (never import local image files).
+5. **Placeholders** — `PropertyImage` with `src=""` shows the icon placeholder automatically; with a real URL it renders the photo. No changes to that component needed.
 6. **DB queries** — always use the `db` client from `@realtor/db`; never raw SQL strings.
 7. **Zod validation** — all API route inputs must go through a Zod schema before touching the DB.
 
@@ -208,7 +296,10 @@ DATABASE_URL=postgresql://postgres.xbwxjtxkmanphogltrok:[PASSWORD]@aws-0-eu-west
 |-------|----------|
 | DB schema | `packages/db/src/schema.ts` |
 | DB client | `packages/db/src/client.ts` |
+| DB seed | `packages/db/src/seed.ts` |
 | Domain types | `packages/domain/src/index.ts` |
+| Listings DB queries | `apps/web/src/lib/listings.ts` |
+| UploadThing router | `apps/web/src/lib/uploadthing.ts` (create in S4) |
 | Tailwind config | `apps/web/tailwind.config.ts` |
 | Clerk middleware | `apps/web/src/middleware.ts` |
 | API routes | `apps/web/src/app/api/` |

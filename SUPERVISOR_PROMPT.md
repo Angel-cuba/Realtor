@@ -36,7 +36,7 @@ Premium real estate platform — Next.js 16 App Router, Supabase (Postgres + Dri
 | S1b — Clerk auth | ✅ Shipped | `middleware.ts`, `layout.tsx`, `auth-nav.tsx`, `/sign-in`, `/sign-up` |
 | S2 — Dashboard | ✅ Shipped | `dashboard/page.tsx` — stats + leads table from DB |
 | MVP cleanup | ✅ Shipped | `property-image.tsx` — centered Building2 icon + label placeholder on `bg-ink` |
-| S3 — DB listings | ⏳ Pending | Replace static fixture with real DB data + seed script |
+| S3 — DB listings | ✅ Shipped | `listings.ts` — Drizzle joins (listings + properties + agents + user_profiles + property_media); `packages/db/src/seed.ts` seeds 6 listings |
 | S4 — Image upload | ⏳ Pending | UploadThing integration for property media |
 | S5 — Lead status | ⏳ Pending | `PATCH /api/leads/[id]`, status dropdown in dashboard |
 
@@ -47,12 +47,17 @@ Premium real estate platform — Next.js 16 App Router, Supabase (Postgres + Dri
   - `?budget=1m` → Willow Park ($735k) only ✅
   - `?budget=1m+` → Hillcrest Villa + Skyline Penthouse ✅
   - `?q=zzznomatch` → "No hay propiedades que coincidan con tu busqueda." ✅
-- Clerk auth guard correctly protects `/dashboard` (404 in dev curl — correct Clerk behavior) ✅
+- Clerk auth guard correctly protects `/dashboard` ✅
 - PropertyImage placeholder renders centered icon — zero broken image icons anywhere ✅
 - `/sign-in` 200, `/sign-up` 200 ✅
 - TypeScript: 0 errors ✅
-- Server logs: clean, no warnings ✅
 - DB: 6 tables present (`agents`, `leads`, `listings`, `properties`, `property_media`, `user_profiles`) ✅
+- DB seed: 6 listings / 6 properties / 3 agents / 6 property_media rows ✅
+- `/comprar` renders 4 sale listings from DB (Hillcrest, Skyline, Willow Park, Lakeview) ✅
+- `/rentar` renders 2 rent listings from DB (North Bay, Old Town) ✅
+- `/propiedades/hillcrest-modern-villa` → 200, agent "Maya Collins" from `user_profiles.display_name` ✅
+- `generateStaticParams` in `propiedades/[slug]/page.tsx` queries DB via `getPublishedListingSlugs()` ✅
+- `apps/web/src/lib/listings.ts` has no static array — all queries are Drizzle ✅
 
 ---
 
@@ -77,27 +82,51 @@ git status                                         # must be clean
 git log --oneline -8                               # review recent commits
 ```
 
-#### 1. Verify S1a — Search filtering
-- Open `/comprar` — property card grid renders with Building2 icon placeholders
-- `?q=austin` → filters to Austin/Hillcrest listing only
-- `?budget=1m` → shows only Willow Park ($735k)
-- `?budget=1m+` → shows Hillcrest Villa + Skyline Penthouse
-- `?q=zzznomatch` → "No hay propiedades que coincidan con tu busqueda." empty state
-- Open `/rentar` — same checks with rent listings
-- ✅ Pass: URL updates, cards filter, empty state appears when no results
+#### 1. Verify DB seed data
+Via Supabase MCP:
+```sql
+SELECT COUNT(*) FROM listings;       -- expect 6
+SELECT COUNT(*) FROM properties;     -- expect 6
+SELECT COUNT(*) FROM agents;         -- expect 3
+SELECT COUNT(*) FROM property_media; -- expect >= 6
+```
 
-#### 2. Verify S1b — Clerk auth
-- Open `/dashboard` without signing in → Clerk intercepts (dev: returns 404 from Clerk's dev-browser handler — this is expected in curl, works correctly in browser)
-- `/sign-in` and `/sign-up` pages return 200
-- ✅ Pass: auth guard works, sign-in page loads
+#### 2. Verify S3 — DB listings
 
-#### 3. Verify S2 — Dashboard
-- Sign in as an agent
-- `/dashboard` shows "Hola, [firstName]" or "Panel de agente"
-- Stats row shows total leads, nuevos, calificados/tour counts from DB
-- Leads table renders with name, email, intent badge, status badge, score, date
-- If no leads: "Aun no hay leads registrados." empty state
-- ✅ Pass: page loads, data reflects actual DB state
+```bash
+curl http://localhost:3000/comprar   # 200, cards render from DB
+curl http://localhost:3000/rentar    # 200, cards render from DB
+curl "http://localhost:3000/comprar?q=austin"   # Austin/Hillcrest only
+curl "http://localhost:3000/comprar?budget=1m"  # Willow Park only ($735k)
+curl "http://localhost:3000/comprar?q=zzz"      # empty state
+curl http://localhost:3000/propiedades/hillcrest-modern-villa  # 200
+```
+
+Verify in `apps/web/src/lib/listings.ts`:
+- No static `listings` array — only Drizzle queries
+- Joins `user_profiles` to get `agentName` from `displayName` (not reconstructed from slug)
+- `generateStaticParams` in `propiedades/[slug]/page.tsx` calls `getPublishedListingSlugs()` from DB
+
+#### 3. Verify S4 — Image upload (after S4 is complete)
+
+```bash
+# UploadThing route must exist and respond
+curl http://localhost:3000/api/uploadthing   # 200
+
+# Upload UI must be accessible (requires login — verify in browser)
+# After uploading an image for a listing:
+# Supabase MCP: SELECT url FROM property_media WHERE url != '' LIMIT 5;
+# Expect: rows with ufs.sh or utfs.io URLs
+
+# After upload, the card should show the real image:
+curl http://localhost:3000/comprar   # check HTML for img src containing ufs.sh or utfs.io
+```
+
+Also verify:
+- `apps/web/src/app/api/uploadthing/route.ts` exists
+- `apps/web/src/lib/uploadthing.ts` exports `OurFileRouter` and React helpers
+- `/dashboard/upload` page accessible to authenticated users
+- Placeholder row logic: first upload replaces the empty `property_media` row (url = ''), subsequent uploads append
 
 #### 4. Verify lead form → DB pipeline
 
@@ -108,29 +137,9 @@ curl -X POST http://localhost:3000/api/leads \
 # Expect: 201 with { lead: { id, name, email, intent, status, score, createdAt, ... } }
 ```
 
-- After submitting, reload `/dashboard` — new lead appears at top of table
-- Clean up test lead: `DELETE FROM leads WHERE email = 'test@example.com' RETURNING id;` via Supabase MCP
-- ✅ Pass: 201 response with full lead object, row visible in dashboard
+Clean up: `DELETE FROM leads WHERE email = 'test@example.com' RETURNING id;` via Supabase MCP
 
-#### 5. Verify PropertyImage placeholders
-- `/comprar` grid: each card shows `bg-ink` panel with centered Building2 icon and property type label
-- `/propiedades/hillcrest-modern-villa` — main image slot and gallery slots show icon placeholder
-- ✅ Pass: zero broken image icons, icon+label visible in every placeholder slot
-
-#### 6. Verify S3 — DB listings (after S3 is complete)
-- DB has seed data: run `npm run db:seed` if tables are empty
-- `/comprar` renders listings from DB (not static array)
-- `/propiedades/[slug]` resolves slug from DB
-- `generateStaticParams` in `propiedades/[slug]/page.tsx` queries DB
-
-```bash
-# Verify seed data exists
-# Via Supabase MCP: SELECT COUNT(*) FROM listings;  -- expect 6
-# SELECT COUNT(*) FROM properties;  -- expect 6
-# SELECT COUNT(*) FROM agents;      -- expect at least 3
-```
-
-#### 7. TypeScript gate
+#### 5. TypeScript gate
 
 ```bash
 npx tsc --project apps/web/tsconfig.json --noEmit
@@ -143,13 +152,12 @@ npx tsc --project apps/web/tsconfig.json --noEmit
 
 | Gap | Impact | Notes |
 |-----|--------|-------|
-| `listingSlug` stripped in API but `listingId` never resolved | Low | Leads saved without listing FK — S3 seed will fix |
-| Static listings fixture — no real DB data | Medium | S3 active phase |
 | `middleware.ts` deprecated in Next.js 16 (should be `proxy.ts`) | Warn | Functional — fix before next Next.js upgrade |
 | RLS enabled but no policies on any table | Info | App uses `postgres` role (bypasses RLS) — revisit with client-side queries |
-| Mobile hamburger menu has no `onClick` handler | Low | `Menu` button in `site-header.tsx` — post-S3 |
+| Mobile hamburger menu has no `onClick` handler | Low | `Menu` button in `site-header.tsx` — post-S4 |
 | No pagination on dashboard leads table | Low | Fine until lead volume grows |
 | `const-*.webp` files in `public/images/realtor/` | None | Orphaned, not referenced — safe to delete |
+| `property_media` rows with `url = ''` | Info | Seed placeholder rows; replaced on first upload in S4 |
 
 ---
 
@@ -174,28 +182,36 @@ Never include AI tool attribution. Never `--no-verify`.
 
 ---
 
-### Starting S3 — brief for the next developer
+### Starting S4 — brief for the next developer
 
-> **S3 goal:** Replace `apps/web/src/lib/listings.ts` static fixture with real DB queries.
+> **S4 goal:** Let agents upload photos for a listing from the dashboard. Images land in `property_media.url` and render on listing cards and detail pages automatically.
 >
-> **Schema joins:** `listings` + `properties` (inner) + `agents` (left) + `property_media` (separate query, order by `sort_order ASC`). First media row = cover image.
+> **`UPLOADTHING_TOKEN` is already in `apps/web/.env.local`** — nothing to configure.
 >
-> **Function signatures must stay identical** — all page components call these directly:
-> - `getListingsByType(type)` — query DB, filter by `listing_type`
-> - `getListingBySlug(slug)` — query DB, match by `slug`
-> - `getFeaturedListings()` — first 4 published listings
-> - `filterListings(items, params)` — keep in-memory filtering or add WHERE clauses
+> **Install:** `npm install uploadthing @uploadthing/react --workspace @realtor/web`
 >
-> **Also update:** `generateStaticParams` in `propiedades/[slug]/page.tsx` — currently imports the static `listings` array directly. Change to a DB query.
+> **Files to create:**
+> - `apps/web/src/app/api/uploadthing/route.ts` — UploadThing route handler
+> - `apps/web/src/lib/uploadthing.ts` — file router with `listingImageUploader`, placeholder-replacement logic, and React helpers
+> - `apps/web/src/app/dashboard/upload/page.tsx` — upload UI: listing selector + `UploadButton`/`UploadDropzone`
 >
-> **Seed script:** `packages/db/src/seed.ts` — insert the 6 fixture listings (create user_profiles + agents rows first, then properties, then listings, then property_media with `image: ""` for now). Add `"db:seed": "tsx packages/db/src/seed.ts"` to root `package.json`.
+> **Key implementation detail — placeholder rows:**
+> The seed created one `property_media` row per listing with `url: ""` and `sortOrder: 0`. `listings.ts` uses the first media row as the cover image. When the first photo is uploaded, the `onUploadComplete` handler should UPDATE the empty row instead of inserting at sortOrder 0 (which would leave the empty row as cover). Subsequent uploads INSERT at incrementing sortOrders.
 >
-> **Seed order (FK dependencies):**
-> 1. `user_profiles` (needed by `agents.user_id`)
-> 2. `agents` (needed by `listings.agent_id`)
-> 3. `properties` (needed by `listings.property_id`)
-> 4. `listings` (needed by `property_media.listing_id`)
-> 5. `property_media` (covers + galleries, `image: ""` for now)
+> **Auth:** The `listingImageUploader` middleware must call `currentUser()` from `@clerk/nextjs/server` and throw `UploadThingError("Unauthorized")` if null. The upload page is already protected by the Clerk middleware.
+>
+> **No schema changes needed** — `property_media(id, listing_id, url, alt, sort_order)` is already in `packages/db/src/schema.ts`.
+>
+> **`PropertyImage` component requires zero changes** — it already renders a real photo when `src` is non-empty and shows the icon placeholder when `src` is empty.
+
+---
+
+### PRÓXIMA FASE TRAS S4
+
+S5 — Lead status management:
+- `PATCH /api/leads/[id]` — validates `{ status }` with Zod enum, auth-guards with Clerk `currentUser()`
+- Status dropdown in dashboard leads table (client component, optimistic update)
+- Status enum: `new | contacted | qualified | tour_scheduled | offer_intent | negotiating | won | lost`
 
 ---
 
@@ -205,7 +221,7 @@ Never include AI tool attribution. Never `--no-verify`.
 npm run dev:web          # start Next.js dev server (port 3000)
 npm run db:generate      # regenerate Drizzle migration files
 npm run db:studio        # open Drizzle Studio (DB browser)
-npm run db:seed          # seed DB with 6 fixture listings (after S3)
+npm run db:seed          # seed DB with 6 fixture listings (idempotent)
 npx tsc --project apps/web/tsconfig.json --noEmit   # type check
 git log --oneline -5     # recent commits
 gh repo view --web       # open GitHub repo
