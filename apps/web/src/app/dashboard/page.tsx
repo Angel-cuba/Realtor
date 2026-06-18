@@ -1,7 +1,6 @@
 import { desc } from "drizzle-orm";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { db, leads } from "@realtor/db";
-import { formatMoney } from "@realtor/domain";
 
 const statusLabel: Record<string, string> = {
   new: "New",
