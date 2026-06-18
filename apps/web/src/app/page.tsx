@@ -11,8 +11,8 @@ const metrics = [
   { value: "$5.8B", label: "portfolio value advised" }
 ];
 
-export default function HomePage() {
-  const featured = getFeaturedListings();
+export default async function HomePage() {
+  const featured = await getFeaturedListings();
 
   return (
     <main>

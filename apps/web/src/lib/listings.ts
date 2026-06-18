@@ -1,158 +1,131 @@
 import type { PropertyListing } from "@realtor/domain";
+import { and, asc, eq, inArray } from "drizzle-orm";
+import {
+  agents,
+  db,
+  listings as listingsTable,
+  properties,
+  propertyMedia
+} from "@realtor/db";
 
-export const listings: PropertyListing[] = [
-  {
-    slug: "hillcrest-modern-villa",
-    title: "Hillcrest modern villa with private courtyard",
-    listingType: "sale",
-    propertyType: "villa",
-    status: "published",
-    city: "Austin",
-    neighborhood: "Hillcrest",
-    addressSummary: "Hillcrest, Austin",
-    price: 1285000,
-    currency: "USD",
-    beds: 5,
-    baths: 4,
-    areaSqft: 4210,
-    lotSqft: 9200,
-    image: "",
-    gallery: [],
-    tags: ["New", "Pool", "Private tour"],
-    agentName: "Maya Collins",
-    agentTitle: "Luxury property advisor",
-    description:
-      "A calm modern villa designed for indoor-outdoor living, with bright social spaces, a private courtyard, and a flexible guest suite.",
-    highlights: ["Private courtyard", "Chef-ready kitchen", "Two-car garage", "Minutes from dining"]
-  },
-  {
-    slug: "downtown-skyline-penthouse",
-    title: "Downtown skyline penthouse near the arts district",
-    listingType: "sale",
-    propertyType: "penthouse",
-    status: "published",
-    city: "Miami",
-    neighborhood: "Arts District",
-    addressSummary: "Arts District, Miami",
-    price: 2140000,
-    currency: "USD",
-    beds: 4,
-    baths: 4,
-    areaSqft: 3180,
-    image: "",
-    gallery: [],
-    tags: ["Penthouse", "Views", "Concierge"],
-    agentName: "Noah Bennett",
-    agentTitle: "Senior buyer specialist",
-    description:
-      "A high-floor residence with wide skyline views, gallery walls, generous entertaining space, and private elevator access.",
-    highlights: ["Private elevator", "City views", "Concierge building", "Walkable location"]
-  },
-  {
-    slug: "willow-park-family-home",
-    title: "Willow Park family home with flexible studio",
-    listingType: "sale",
-    propertyType: "house",
-    status: "published",
-    city: "Denver",
-    neighborhood: "Willow Park",
-    addressSummary: "Willow Park, Denver",
-    price: 735000,
-    currency: "USD",
-    beds: 4,
-    baths: 3,
-    areaSqft: 2680,
-    lotSqft: 6100,
-    image: "",
-    gallery: [],
-    tags: ["Family", "Studio", "Price aligned"],
-    agentName: "Lena Garcia",
-    agentTitle: "Neighborhood specialist",
-    description:
-      "A practical, warm home with a studio that works for guests, remote work, or a future rental strategy.",
-    highlights: ["Flexible studio", "Renovated baths", "Quiet street", "Close to parks"]
-  },
-  {
-    slug: "north-bay-rental-retreat",
-    title: "North Bay rental retreat with garden terrace",
-    listingType: "rent",
-    propertyType: "townhouse",
-    status: "published",
-    city: "San Diego",
-    neighborhood: "North Bay",
-    addressSummary: "North Bay, San Diego",
-    price: 4800,
-    currency: "USD",
-    beds: 3,
-    baths: 3,
-    areaSqft: 1880,
-    image: "",
-    gallery: [],
-    tags: ["Rental", "Terrace", "Available now"],
-    agentName: "Maya Collins",
-    agentTitle: "Luxury property advisor",
-    description:
-      "A low-maintenance rental with generous light, a private outdoor terrace, and quick access to the coastline.",
-    highlights: ["Available this month", "Private terrace", "Pet-friendly review", "Two parking spaces"]
-  },
-  {
-    slug: "old-town-apartment",
-    title: "Old Town apartment with restored details",
-    listingType: "rent",
-    propertyType: "apartment",
-    status: "published",
-    city: "Chicago",
-    neighborhood: "Old Town",
-    addressSummary: "Old Town, Chicago",
-    price: 2950,
-    currency: "USD",
-    beds: 2,
-    baths: 2,
-    areaSqft: 1160,
-    image: "",
-    gallery: [],
-    tags: ["Apartment", "Walkable", "Bright"],
-    agentName: "Noah Bennett",
-    agentTitle: "Senior buyer specialist",
-    description:
-      "A polished apartment in a walkable neighborhood with restored character, tall windows, and practical storage.",
-    highlights: ["Walkable block", "Restored details", "Tall windows", "In-unit laundry"]
-  },
-  {
-    slug: "lakeview-build-ready-land",
-    title: "Lakeview build-ready land with approved concept",
-    listingType: "sale",
-    propertyType: "land",
-    status: "published",
-    city: "Nashville",
-    neighborhood: "Lakeview",
-    addressSummary: "Lakeview, Nashville",
-    price: 420000,
-    currency: "USD",
-    beds: 0,
-    baths: 0,
-    areaSqft: 14400,
-    image: "",
-    gallery: [],
-    tags: ["Land", "Build-ready", "Investor"],
-    agentName: "Lena Garcia",
-    agentTitle: "Neighborhood specialist",
-    description:
-      "A build-ready parcel with approved concept materials and strong access to the lake corridor.",
-    highlights: ["Approved concept", "Utility access", "Investor-ready", "Lake corridor"]
-  }
-];
+type ListingRow = {
+  listing: typeof listingsTable.$inferSelect;
+  property: typeof properties.$inferSelect;
+  agent: typeof agents.$inferSelect | null;
+};
 
-export function getListingsByType(type: "sale" | "rent") {
-  return listings.filter((listing) => listing.listingType === type);
+async function getMediaByListingId(listingIds: string[]) {
+  if (listingIds.length === 0) return new Map<string, string[]>();
+
+  const rows = await db
+    .select()
+    .from(propertyMedia)
+    .where(inArray(propertyMedia.listingId, listingIds))
+    .orderBy(asc(propertyMedia.sortOrder));
+
+  return rows.reduce((mediaByListing, media) => {
+    const urls = mediaByListing.get(media.listingId) ?? [];
+    urls.push(media.url);
+    mediaByListing.set(media.listingId, urls);
+    return mediaByListing;
+  }, new Map<string, string[]>());
 }
 
-export function getListingBySlug(slug: string) {
-  return listings.find((listing) => listing.slug === slug);
+async function mapListingRows(rows: ListingRow[]) {
+  const mediaByListing = await getMediaByListingId(rows.map((row) => row.listing.id));
+
+  return rows.map(({ agent, listing, property }): PropertyListing => {
+    const media = mediaByListing.get(listing.id) ?? [];
+
+    return {
+      slug: listing.slug,
+      title: listing.title,
+      listingType: listing.listingType,
+      propertyType: property.propertyType,
+      status: listing.status,
+      city: property.city,
+      neighborhood: property.neighborhood,
+      addressSummary: `${property.neighborhood}, ${property.city}`,
+      price: listing.price,
+      currency: listing.currency === "EUR" ? "EUR" : "USD",
+      beds: property.beds,
+      baths: property.baths,
+      areaSqft: property.areaSqft,
+      ...(property.lotSqft ? { lotSqft: property.lotSqft } : {}),
+      image: media[0] ?? "",
+      gallery: media.slice(1),
+      tags: listing.tags,
+      agentName: agent?.slug
+        ? agent.slug
+            .split("-")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" ")
+        : "Realtor advisor",
+      agentTitle: agent?.title ?? "Property advisor",
+      description: listing.summary,
+      highlights: listing.highlights
+    };
+  });
 }
 
-export function getFeaturedListings() {
-  return listings.slice(0, 4);
+export async function getListingsByType(type: "sale" | "rent") {
+  const rows = await db
+    .select({
+      listing: listingsTable,
+      property: properties,
+      agent: agents
+    })
+    .from(listingsTable)
+    .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
+    .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+    .where(and(eq(listingsTable.listingType, type), eq(listingsTable.status, "published")))
+    .orderBy(asc(listingsTable.publishedAt), asc(listingsTable.slug));
+
+  return mapListingRows(rows);
+}
+
+export async function getListingBySlug(slug: string) {
+  const rows = await db
+    .select({
+      listing: listingsTable,
+      property: properties,
+      agent: agents
+    })
+    .from(listingsTable)
+    .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
+    .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+    .where(eq(listingsTable.slug, slug))
+    .limit(1);
+
+  const [listing] = await mapListingRows(rows);
+  return listing;
+}
+
+export async function getFeaturedListings() {
+  const rows = await db
+    .select({
+      listing: listingsTable,
+      property: properties,
+      agent: agents
+    })
+    .from(listingsTable)
+    .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
+    .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+    .where(eq(listingsTable.status, "published"))
+    .orderBy(asc(listingsTable.publishedAt), asc(listingsTable.slug))
+    .limit(4);
+
+  return mapListingRows(rows);
+}
+
+export async function getPublishedListingSlugs() {
+  const rows = await db
+    .select({ slug: listingsTable.slug })
+    .from(listingsTable)
+    .where(eq(listingsTable.status, "published"))
+    .orderBy(asc(listingsTable.publishedAt), asc(listingsTable.slug));
+
+  return rows.map((row) => row.slug);
 }
 
 export function filterListings(

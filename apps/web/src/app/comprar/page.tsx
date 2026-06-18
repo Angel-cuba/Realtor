@@ -8,7 +8,7 @@ export default async function BuyPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const listings = filterListings(getListingsByType("sale"), params);
+  const listings = filterListings(await getListingsByType("sale"), params);
   const q = (params.q as string | undefined) ?? "";
   const budget = (params.budget as string | undefined) ?? "";
 
