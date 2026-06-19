@@ -19,3 +19,8 @@ coverage/
 .idea/
 .vscode/
 .claude/
+
+# Local orientation guides — kept locally, not needed on GitHub
+PROJECT_PLAN.md
+TEAM_PROMPT.md
+SUPERVISOR_PROMPT.md

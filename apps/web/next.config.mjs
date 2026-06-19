@@ -5,6 +5,13 @@ const nextConfig = {
   turbopack: {
     root: path.resolve(process.cwd(), "../..")
   },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "ufs.sh" },
+      { protocol: "https", hostname: "*.ufs.sh" },
+      { protocol: "https", hostname: "utfs.io" }
+    ]
+  },
   transpilePackages: ["@realtor/domain"]
 };
 
