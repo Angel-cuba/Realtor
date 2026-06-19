@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
-import { db, leads } from "@realtor/db";
+import { eq, sql } from "drizzle-orm";
+import { z } from "zod";
+import { db, leads, agents, userProfiles } from "@realtor/db";
 import { leadStatusUpdateSchema } from "@realtor/domain";
+
+const idSchema = z.string().uuid();
 
 export async function PATCH(
   request: Request,
@@ -13,10 +16,25 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const [agentProfile] = await db
+    .select({ id: userProfiles.id })
+    .from(userProfiles)
+    .innerJoin(agents, eq(agents.userProfileId, userProfiles.id))
+    .where(eq(userProfiles.clerkUserId, userId))
+    .limit(1);
+
+  if (!agentProfile) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { id } = await params;
+  const idParsed = idSchema.safeParse(id);
+  if (!idParsed.success) {
+    return NextResponse.json({ error: "Invalid lead ID" }, { status: 400 });
+  }
+
   const payload = await request.json();
   const parsed = leadStatusUpdateSchema.safeParse(payload);
-
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid status", issues: parsed.error.flatten() },
@@ -27,8 +45,8 @@ export async function PATCH(
   try {
     const [lead] = await db
       .update(leads)
-      .set({ status: parsed.data.status, updatedAt: new Date() })
-      .where(eq(leads.id, id))
+      .set({ status: parsed.data.status, updatedAt: sql`now()` })
+      .where(eq(leads.id, idParsed.data))
       .returning();
 
     if (!lead) {
