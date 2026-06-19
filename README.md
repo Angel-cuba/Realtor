@@ -96,6 +96,7 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | `/dashboard` | Agent dashboard (Clerk-protected) |
 | `/dashboard/upload` | Photo upload UI (Clerk-protected) |
 | `/api/leads` | `POST` — validate with Zod, persist to DB |
+| `/api/leads/[id]` | `PATCH` — update lead status (agent-only, Zod-validated) |
 | `/api/uploadthing` | UploadThing file router endpoint |
 
 ## Phase history
@@ -109,7 +110,8 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S2 — Dashboard | ✅ Shipped | Stats + leads table from DB |
 | S3 — DB listings | ✅ Shipped | All listings served from Drizzle joins; seed script |
 | S4 — Image upload | ✅ Shipped | UploadThing for property media, upload UI at `/dashboard/upload` |
-| S5 — Lead status | ⏳ Pending | `PATCH /api/leads/[id]`, status dropdown in dashboard |
+| S5 — Lead status | ✅ Shipped | `PATCH /api/leads/[id]`, interactive status dropdown with optimistic update |
+| S6 — TBD | ⏳ Next | Candidates: email notifications (Resend), leads pagination, API tests, Expo mobile |
 
 ## Deployment
 
