@@ -11,10 +11,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@realtor/domain": "*",
     "drizzle-orm": "0.45.2",
     "postgres": "3.4.9"
   },
   "devDependencies": {
+    "@types/node": "^25.9.3",
     "drizzle-kit": "0.31.10",
     "typescript": "6.0.3"
   }
