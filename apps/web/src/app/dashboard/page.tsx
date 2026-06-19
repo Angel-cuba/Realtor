@@ -3,15 +3,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
-import { LeadStatusSelect } from "@/components/lead-status-select";
-
-const intentLabel: Record<string, string> = {
-  buy: "Buy",
-  rent: "Rent",
-  sell: "Sell",
-  lease_out: "Lease out",
-  general: "General",
-};
+import { LeadsTable } from "@/components/leads-table";
 
 export default async function DashboardPage() {
   await auth.protect();
@@ -22,6 +14,15 @@ export default async function DashboardPage() {
   const total = allLeads.length;
   const newLeads = allLeads.filter((l) => l.status === "new").length;
   const qualified = allLeads.filter((l) => l.status === "qualified" || l.status === "tour_scheduled").length;
+  const leadRows = allLeads.map((lead) => ({
+    id: lead.id,
+    name: lead.name,
+    email: lead.email,
+    intent: lead.intent,
+    status: lead.status,
+    score: lead.score,
+    createdAt: lead.createdAt.toISOString()
+  }));
 
   return (
     <main className="min-h-[calc(100svh-4rem)] bg-linen">
@@ -61,51 +62,7 @@ export default async function DashboardPage() {
           <div className="border-b border-black/10 px-6 py-4">
             <h2 className="font-semibold">Leads recientes</h2>
           </div>
-          {allLeads.length === 0 ? (
-            <p className="px-6 py-12 text-center text-black/45">Aun no hay leads registrados.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-[0.14em] text-black/45">
-                    <th className="px-6 py-3">Nombre</th>
-                    <th className="px-6 py-3">Email</th>
-                    <th className="px-6 py-3">Intencion</th>
-                    <th className="px-6 py-3">Estado</th>
-                    <th className="px-6 py-3">Score</th>
-                    <th className="px-6 py-3">Fecha</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-black/[0.06]">
-                  {allLeads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-black/[0.02]">
-                      <td className="px-6 py-4 font-medium">{lead.name}</td>
-                      <td className="px-6 py-4 text-black/60">{lead.email}</td>
-                      <td className="px-6 py-4">
-                        <span className="rounded bg-linen px-2 py-1 text-xs font-medium">
-                          {intentLabel[lead.intent] ?? lead.intent}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <LeadStatusSelect
-                          leadId={lead.id}
-                          initialStatus={lead.status}
-                        />
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-moss">{lead.score}</td>
-                      <td className="px-6 py-4 text-black/45">
-                        {new Date(lead.createdAt).toLocaleDateString("es", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <LeadsTable allLeads={leadRows} />
         </div>
       </div>
     </main>
