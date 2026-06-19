@@ -20,11 +20,11 @@ interface Props {
 }
 
 export function LeadStatusSelect({ leadId, initialStatus }: Props) {
+  const [serverStatus, setServerStatus] = useState<LeadStatus>(initialStatus);
   const [status, setStatus] = useState<LeadStatus>(initialStatus);
   const [isPending, startTransition] = useTransition();
 
   function handleChange(next: LeadStatus) {
-    const prev = status;
     setStatus(next);
 
     startTransition(async () => {
@@ -34,8 +34,10 @@ export function LeadStatusSelect({ leadId, initialStatus }: Props) {
         body: JSON.stringify({ status: next }),
       });
 
-      if (!res.ok) {
-        setStatus(prev);
+      if (res.ok) {
+        setServerStatus(next);
+      } else {
+        setStatus(serverStatus);
       }
     });
   }

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
 import { LeadStatusSelect } from "@/components/lead-status-select";
-import type { LeadStatus } from "@realtor/domain";
 
 const intentLabel: Record<string, string> = {
   buy: "Buy",
@@ -90,7 +89,7 @@ export default async function DashboardPage() {
                       <td className="px-6 py-4">
                         <LeadStatusSelect
                           leadId={lead.id}
-                          initialStatus={lead.status as LeadStatus}
+                          initialStatus={lead.status}
                         />
                       </td>
                       <td className="px-6 py-4 font-semibold text-moss">{lead.score}</td>
