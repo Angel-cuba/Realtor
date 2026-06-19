@@ -9,13 +9,13 @@ import {
   timestamp,
   uuid
 } from "drizzle-orm/pg-core";
-import { leadStatuses, listingStatuses, listingTypes, propertyTypes } from "@realtor/domain";
+import { leadIntents, leadStatuses, listingStatuses, listingTypes, propertyTypes } from "@realtor/domain";
 
 export const listingTypeEnum = pgEnum("listing_type", listingTypes);
 export const propertyTypeEnum = pgEnum("property_type", propertyTypes);
 export const listingStatusEnum = pgEnum("listing_status", listingStatuses);
 export const leadStatusEnum = pgEnum("lead_status", leadStatuses);
-export const leadIntentEnum = pgEnum("lead_intent", ["buy", "rent", "sell", "lease_out", "general"]);
+export const leadIntentEnum = pgEnum("lead_intent", leadIntents);
 
 export const userProfiles = pgTable("user_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
