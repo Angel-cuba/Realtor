@@ -1,20 +1,36 @@
-import { desc } from "drizzle-orm";
+import { count, desc, eq, or } from "drizzle-orm";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
 import { LeadsTable } from "@/components/leads-table";
 
-export default async function DashboardPage() {
+const PAGE_SIZE = 10;
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   await auth.protect();
   const user = await currentUser();
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const offset = (page - 1) * PAGE_SIZE;
 
-  const allLeads = await db.select().from(leads).orderBy(desc(leads.createdAt));
+  const [[{ total }], [{ newCount }], [{ qualifiedCount }], pageLeads] = await Promise.all([
+    db.select({ total: count() }).from(leads),
+    db.select({ newCount: count() }).from(leads).where(eq(leads.status, "new")),
+    db
+      .select({ qualifiedCount: count() })
+      .from(leads)
+      .where(or(eq(leads.status, "qualified"), eq(leads.status, "tour_scheduled"))),
+    db.select().from(leads).orderBy(desc(leads.createdAt)).limit(PAGE_SIZE).offset(offset),
+  ]);
 
-  const total = allLeads.length;
-  const newLeads = allLeads.filter((l) => l.status === "new").length;
-  const qualified = allLeads.filter((l) => l.status === "qualified" || l.status === "tour_scheduled").length;
-  const leadRows = allLeads.map((lead) => ({
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const leadRows = pageLeads.map((lead) => ({
     id: lead.id,
     name: lead.name,
     email: lead.email,
@@ -50,11 +66,11 @@ export default async function DashboardPage() {
           </div>
           <div className="rounded bg-white p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Nuevos</p>
-            <p className="mt-2 text-4xl font-semibold">{newLeads}</p>
+            <p className="mt-2 text-4xl font-semibold">{newCount}</p>
           </div>
           <div className="rounded bg-white p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Calificados / Tour</p>
-            <p className="mt-2 text-4xl font-semibold">{qualified}</p>
+            <p className="mt-2 text-4xl font-semibold">{qualifiedCount}</p>
           </div>
         </div>
 
@@ -62,7 +78,7 @@ export default async function DashboardPage() {
           <div className="border-b border-black/10 px-6 py-4">
             <h2 className="font-semibold">Leads recientes</h2>
           </div>
-          <LeadsTable allLeads={leadRows} />
+          <LeadsTable key={page} leads={leadRows} page={page} totalPages={totalPages} />
         </div>
       </div>
     </main>

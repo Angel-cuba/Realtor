@@ -111,7 +111,7 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S3 — DB listings | ✅ Shipped | All listings served from Drizzle joins; seed script |
 | S4 — Image upload | ✅ Shipped | UploadThing for property media, upload UI at `/dashboard/upload` |
 | S5 — Lead status | ✅ Shipped | `PATCH /api/leads/[id]`, interactive status dropdown with optimistic update |
-| S6 — TBD | ⏳ Next | Candidates: email notifications (Resend), leads pagination, API tests, Expo mobile |
+| S6 — Leads pagination | ✅ Shipped | Server-side `LIMIT/OFFSET` pagination, `COUNT` queries for stats, `?page=` URL param |
 
 ## Deployment
 
