@@ -1,5 +1,7 @@
 import { desc } from "drizzle-orm";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
+import { UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
 
 const statusLabel: Record<string, string> = {
@@ -41,6 +43,13 @@ export default async function DashboardPage() {
               {user?.firstName ? `Hola, ${user.firstName}` : "Panel de agente"}
             </h1>
           </div>
+          <Link
+            className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 text-sm font-semibold text-white"
+            href="/dashboard/upload"
+          >
+            <UploadCloud size={17} aria-hidden />
+            Subir fotos
+          </Link>
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
