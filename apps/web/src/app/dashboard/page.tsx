@@ -3,17 +3,8 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
-
-const statusLabel: Record<string, string> = {
-  new: "New",
-  contacted: "Contacted",
-  qualified: "Qualified",
-  tour_scheduled: "Tour scheduled",
-  offer_intent: "Offer intent",
-  negotiating: "Negotiating",
-  won: "Won",
-  lost: "Lost",
-};
+import { LeadStatusSelect } from "@/components/lead-status-select";
+import type { LeadStatus } from "@realtor/domain";
 
 const intentLabel: Record<string, string> = {
   buy: "Buy",
@@ -97,9 +88,10 @@ export default async function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="rounded bg-black/[0.04] px-2 py-1 text-xs font-medium">
-                          {statusLabel[lead.status] ?? lead.status}
-                        </span>
+                        <LeadStatusSelect
+                          leadId={lead.id}
+                          initialStatus={lead.status as LeadStatus}
+                        />
                       </td>
                       <td className="px-6 py-4 font-semibold text-moss">{lead.score}</td>
                       <td className="px-6 py-4 text-black/45">

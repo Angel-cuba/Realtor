@@ -1,5 +1,21 @@
 import { z } from "zod";
 
+export const leadStatuses = [
+  "new",
+  "contacted",
+  "qualified",
+  "tour_scheduled",
+  "offer_intent",
+  "negotiating",
+  "won",
+  "lost"
+] as const;
+export type LeadStatus = (typeof leadStatuses)[number];
+
+export const leadStatusUpdateSchema = z.object({
+  status: z.enum(leadStatuses)
+});
+
 export const listingTypes = ["sale", "rent"] as const;
 export const propertyTypes = ["house", "apartment", "villa", "townhouse", "land", "penthouse"] as const;
 export const listingStatuses = [
