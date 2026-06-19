@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { leadStatuses, type LeadStatus } from "@realtor/domain";
 
 type DashboardLead = {
@@ -14,7 +15,9 @@ type DashboardLead = {
 };
 
 type LeadsTableProps = {
-  allLeads: DashboardLead[];
+  leads: DashboardLead[];
+  page: number;
+  totalPages: number;
 };
 
 const intentLabel: Record<string, string> = {
@@ -44,8 +47,8 @@ function formatDate(date: string) {
   });
 }
 
-export function LeadsTable({ allLeads }: LeadsTableProps) {
-  const [leads, setLeads] = useState(allLeads);
+export function LeadsTable({ leads: initialLeads, page, totalPages }: LeadsTableProps) {
+  const [leads, setLeads] = useState(initialLeads);
   const [pendingLeadId, setPendingLeadId] = useState<string | null>(null);
   const [failedLeadId, setFailedLeadId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -93,7 +96,7 @@ export function LeadsTable({ allLeads }: LeadsTableProps) {
     });
   }
 
-  if (allLeads.length === 0) {
+  if (leads.length === 0) {
     return <p className="px-6 py-12 text-center text-black/45">Aun no hay leads registrados.</p>;
   }
 
@@ -147,6 +150,27 @@ export function LeadsTable({ allLeads }: LeadsTableProps) {
           })}
         </tbody>
       </table>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-black/10 px-6 py-4 text-sm">
+          {page > 1 ? (
+            <Link href={`?page=${page - 1}`} className="font-medium text-gold hover:underline">
+              ← Anterior
+            </Link>
+          ) : (
+            <span className="text-black/25">← Anterior</span>
+          )}
+          <span className="text-black/45">
+            Página {page} de {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link href={`?page=${page + 1}`} className="font-medium text-gold hover:underline">
+              Siguiente →
+            </Link>
+          ) : (
+            <span className="text-black/25">Siguiente →</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
