@@ -1,5 +1,6 @@
 import { count, desc, eq, or } from "drizzle-orm";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
@@ -15,7 +16,7 @@ export default async function DashboardPage({
   await auth.protect();
   const user = await currentUser();
   const { page: pageParam } = await searchParams;
-  const page = Math.max(1, Number(pageParam) || 1);
+  const page = Math.max(1, Math.floor(Number(pageParam) || 1));
   const offset = (page - 1) * PAGE_SIZE;
 
   const [[{ total }], [{ newCount }], [{ qualifiedCount }], pageLeads] = await Promise.all([
@@ -29,6 +30,10 @@ export default async function DashboardPage({
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  if (page > totalPages && total > 0) {
+    redirect(`/dashboard?page=${totalPages}`);
+  }
 
   const leadRows = pageLeads.map((lead) => ({
     id: lead.id,
