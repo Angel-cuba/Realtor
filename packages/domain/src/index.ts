@@ -35,7 +35,9 @@ export type PropertyType = (typeof propertyTypes)[number];
 export type ListingStatus = (typeof listingStatuses)[number];
 export type UserRole = (typeof userRoles)[number];
 
-export const leadIntentSchema = z.enum(["buy", "rent", "sell", "lease_out", "general"]);
+export const leadIntents = ["buy", "rent", "sell", "lease_out", "general"] as const;
+export type LeadIntent = (typeof leadIntents)[number];
+export const leadIntentSchema = z.enum(leadIntents);
 
 export const leadInputSchema = z.object({
   name: z.string().min(2).max(120),
