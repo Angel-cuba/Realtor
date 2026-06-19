@@ -9,36 +9,12 @@ import {
   timestamp,
   uuid
 } from "drizzle-orm/pg-core";
+import { leadStatuses, listingStatuses, listingTypes, propertyTypes } from "@realtor/domain";
 
-export const listingTypeEnum = pgEnum("listing_type", ["sale", "rent"]);
-export const propertyTypeEnum = pgEnum("property_type", [
-  "house",
-  "apartment",
-  "villa",
-  "townhouse",
-  "land",
-  "penthouse"
-]);
-export const listingStatusEnum = pgEnum("listing_status", [
-  "draft",
-  "pending_review",
-  "published",
-  "reserved",
-  "under_contract",
-  "sold",
-  "rented",
-  "archived"
-]);
-export const leadStatusEnum = pgEnum("lead_status", [
-  "new",
-  "contacted",
-  "qualified",
-  "tour_scheduled",
-  "offer_intent",
-  "negotiating",
-  "won",
-  "lost"
-]);
+export const listingTypeEnum = pgEnum("listing_type", listingTypes);
+export const propertyTypeEnum = pgEnum("property_type", propertyTypes);
+export const listingStatusEnum = pgEnum("listing_status", listingStatuses);
+export const leadStatusEnum = pgEnum("lead_status", leadStatuses);
 export const leadIntentEnum = pgEnum("lead_intent", ["buy", "rent", "sell", "lease_out", "general"]);
 
 export const userProfiles = pgTable("user_profiles", {
