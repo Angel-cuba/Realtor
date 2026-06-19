@@ -1,75 +1,119 @@
 # Realtor Platform
 
-Monorepo for a premium real estate platform covering web, mobile, shared domain logic, and database schema.
+Premium real estate platform for Spanish-speaking markets — property listings, lead capture, and agent tooling built as a production-grade monorepo.
 
-## Apps
+## What it does
 
-- `apps/web`: Next.js 16 App Router — public site, property listings, lead capture, and agent dashboard.
-- `apps/mobile`: Expo companion app for search, favorites, tours, and agent follow-up (not active yet).
-- `packages/domain`: shared types, validation, labels, and business rules.
-- `packages/db`: Drizzle ORM schema and client for Supabase/Postgres.
+- **Public site** — listing search and detail pages for buying and renting, filtered by city and budget
+- **Lead pipeline** — visitors submit inquiries that land directly in the agent dashboard
+- **Agent dashboard** — authenticated view with lead stats, status tracking, and photo upload
+- **Media upload** — agents upload property photos from the dashboard; images serve from UploadThing CDN and render on listing cards automatically
 
-## Current status
+## Monorepo layout
 
-| Phase | Status |
-|-------|--------|
-| S0 — Scaffold + UI | ✅ Shipped |
-| S0+ — DB wiring (leads API) | ✅ Shipped |
-| S1a — Search filtering | ✅ Shipped |
-| S1b — Clerk auth | ✅ Shipped |
-| S2 — Agent dashboard | ✅ Shipped |
-| S3 — Listings from DB | ✅ Shipped |
-| S4 — Image upload | ⏳ In progress |
-| S5 — Lead status management | ⏳ Pending |
+```
+/
+├── apps/
+│   ├── web/          — Next.js 16 App Router (primary app)
+│   └── mobile/       — Expo companion app (not active yet)
+├── packages/
+│   ├── domain/       — Shared TypeScript types, Zod schemas, formatters
+│   └── db/           — Drizzle ORM schema, client, seed script
+└── drizzle.config.ts — Reads DATABASE_URL from apps/web/.env.local
+```
 
-## Local setup
+## Tech stack
+
+| Layer | Tech | Version |
+|-------|------|---------|
+| Framework | Next.js App Router | 16.2.9 |
+| Language | TypeScript strict | 6.x |
+| Styling | Tailwind CSS | 3.4 |
+| Auth | Clerk | 7.5.3 |
+| ORM | Drizzle | 0.45.x |
+| Database | Supabase (Postgres) | — |
+| Media upload | UploadThing | v7 |
+| Monorepo | Turborepo + npm workspaces | — |
+| Runtime | Node 24.16.0 | (`.nvmrc`) |
+
+**Design tokens:** `bg-ink` (dark), `bg-linen` (warm off-white), `text-gold`/`bg-gold` (accent), `text-moss` (secondary)
+
+## Setup
 
 ```bash
-# Use correct Node version (24.16.0)
-nvm use
+# 1. Use the correct Node version
+nvm use   # reads .nvmrc → 24.16.0
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Configure environment
+# 3. Configure environment
 cp .env.example apps/web/.env.local
-# Fill in all values — see .env.example for required keys
+# Fill in all values — see table below
 
-# Start dev server
-npm run dev:web
+# 4. Seed the database (idempotent)
+npm run db:seed
+
+# 5. Start the dev server
+npm run dev:web   # http://localhost:3000
 ```
 
-For mobile (when active):
+## Environment variables
+
+All variables live in `apps/web/.env.local`. Never commit this file.
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk public key |
+| `CLERK_SECRET_KEY` | Clerk secret key |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Set to `/sign-in` |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Set to `/sign-up` |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL` | Set to `/dashboard` |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL` | Set to `/dashboard` |
+| `DATABASE_URL` | Supabase transaction pooler, **port 6543** |
+| `UPLOADTHING_TOKEN` | UploadThing project token |
+
+> `DATABASE_URL` must point to the **transaction pooler** (port 6543), not the direct connection (port 5432). Direct connections time out from local machines.
+
+## Database commands
 
 ```bash
-npm run dev:mobile
+npm run db:generate   # regenerate Drizzle migration files after schema changes
+npm run db:studio     # open Drizzle Studio (visual DB browser)
+npm run db:seed       # seed 6 fixture listings with agents and media rows
 ```
 
-## Environment
+Schema tables (in FK order): `user_profiles → agents → properties → listings → property_media`, `leads`
 
-Use `.env.example` as the contract. Do not commit `.env` files.
+## Key routes
 
-Required integrations:
+| Route | Description |
+|-------|-------------|
+| `/` | Home — featured listings |
+| `/comprar` | Buy listings — filterable by `?q=&budget=` |
+| `/rentar` | Rent listings |
+| `/propiedades/[slug]` | Property detail + lead capture form |
+| `/dashboard` | Agent dashboard (Clerk-protected) |
+| `/dashboard/upload` | Photo upload UI (Clerk-protected) |
+| `/api/leads` | `POST` — validate with Zod, persist to DB |
+| `/api/uploadthing` | UploadThing file router endpoint |
 
-- Clerk for authentication and authorization.
-- Supabase Postgres for data (use transaction pooler URL, port **6543**).
-- UploadThing for media upload.
-- Resend for transactional email.
-- Vercel for web deployment.
+## Phase history
 
-## Database
-
-```bash
-npm run db:generate  # regenerate Drizzle migrations
-npm run db:studio    # open Drizzle Studio
-npm run db:seed      # seed DB with 6 fixture listings (idempotent, safe to re-run)
-```
-
-**Important:** `DATABASE_URL` must use the Supabase transaction pooler (port 6543), not the direct connection (port 5432). Direct connections time out from local machines.
+| Phase | Status | What shipped |
+|-------|--------|-------------|
+| S0 — Scaffold + UI | ✅ Shipped | Monorepo, domain types, property cards, lead form |
+| S0+ — DB wiring | ✅ Shipped | Drizzle + Supabase, `POST /api/leads` persists rows |
+| S1a — Search | ✅ Shipped | Client-side filter by city + budget via URL params |
+| S1b — Auth | ✅ Shipped | Clerk middleware protects `/dashboard` |
+| S2 — Dashboard | ✅ Shipped | Stats + leads table from DB |
+| S3 — DB listings | ✅ Shipped | All listings served from Drizzle joins; seed script |
+| S4 — Image upload | ✅ Shipped | UploadThing for property media, upload UI at `/dashboard/upload` |
+| S5 — Lead status | ⏳ Pending | `PATCH /api/leads/[id]`, status dropdown in dashboard |
 
 ## Deployment
 
-Update the Vercel CLI before deploying:
+Target: Vercel. Update the CLI before deploying:
 
 ```bash
 npm i -g vercel@latest
