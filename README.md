@@ -128,6 +128,55 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S7d — Expo wiring | ✅ Shipped | `ClerkProvider`, real data fetch, lead form submit, status-filtered detail |
 | S8 — MVP polish | ✅ Shipped | Fraunces+Geist pairing, real hero images, mobile menu drawer, colored status pills, inline lead success state, es-ES money, a11y focus rings |
 | S9 — Email notifications | ✅ Shipped | Resend integration on `POST /api/leads`, env-gated (skips silently if unconfigured), Vitest coverage for the dispatch path |
+| S10 — Listings CRUD | ✅ Shipped | Dashboard listings table, status pills, transactional `POST /api/listings`, `PATCH /api/listings/[slug]` for status, new listing form |
+| S11 — Lead detail + notes + filters | ✅ Shipped | `/dashboard/leads/[id]` with notes feed, `POST /api/leads/[id]/notes`, server-side status/intent/q filters preserving pagination |
+| S12 — Hardening | ✅ Shipped | In-memory IP rate limit on `POST /api/leads` (10 req / 10 min), Vercel BotID enablement guide, Supabase RLS policy docs |
+
+## Security & hardening
+
+**Rate limit** — `POST /api/leads` enforces 10 requests per IP per 10 minutes via an in-memory bucket (`apps/web/src/lib/rate-limit.ts`). The implementation is per-instance, so when the app runs on Vercel Fluid Compute behind multiple instances, the budget is per-instance. For a stricter, cross-instance limit, swap the backing `Map` for Upstash Redis (`@upstash/ratelimit`) or Vercel KV.
+
+**Vercel BotID** — to enable bot challenge on `POST /api/leads`, install the [BotID adapter](https://vercel.com/docs/botid) and wrap the route:
+
+```ts
+import { protect } from "@vercel/botid";
+
+export async function POST(request: Request) {
+  const verdict = await protect(request);
+  if (verdict === "block") return new Response(null, { status: 403 });
+  // ... existing flow
+}
+```
+
+BotID is a Vercel platform feature, so it is left commented-out during local development.
+
+**Supabase RLS** — apply the following policies once the project is moved to client-side queries. Today all writes go through server-only routes with `auth.protect()` so RLS is not yet load-bearing, but enable it before any client-side `@supabase/supabase-js` usage:
+
+```sql
+ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.lead_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.listings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.property_media ENABLE ROW LEVEL SECURITY;
+
+-- Public can only read published listings + their media.
+CREATE POLICY listings_public_read ON public.listings
+  FOR SELECT TO anon, authenticated USING (status = 'published');
+
+CREATE POLICY properties_public_read ON public.properties
+  FOR SELECT TO anon, authenticated USING (true);
+
+CREATE POLICY property_media_public_read ON public.property_media
+  FOR SELECT TO anon, authenticated USING (true);
+
+-- Lead inserts are allowed to anyone (the API still validates with Zod).
+CREATE POLICY leads_public_insert ON public.leads
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+-- Reads, updates, and notes are agent-only via the service role used by Next.js.
+-- The server-side Drizzle client uses the service role and bypasses RLS,
+-- so no explicit policy is needed for write paths.
+```
 
 ## Deployment
 

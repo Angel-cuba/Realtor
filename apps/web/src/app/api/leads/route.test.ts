@@ -12,6 +12,7 @@ vi.mock("@/lib/email", () => ({
 import { POST } from "./route";
 import { db } from "@realtor/db";
 import { sendNewLeadEmail } from "@/lib/email";
+import { __resetRateLimitForTests } from "@/lib/rate-limit";
 
 const validPayload = {
   name: "María García",
@@ -39,6 +40,7 @@ function mockInsert(returnValue: unknown[]) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  __resetRateLimitForTests();
   mockInsert([mockLead]);
 });
 
@@ -118,5 +120,26 @@ describe("POST /api/leads", () => {
 
     await POST(makeRequest(validPayload));
     expect(sendNewLeadEmail).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 once the IP exceeds the rate limit window", async () => {
+    function makeRequestFromIp(body: unknown) {
+      return new Request("http://localhost:3000/api/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "203.0.113.42",
+        },
+        body: JSON.stringify(body),
+      });
+    }
+
+    for (let i = 0; i < 10; i++) {
+      const res = await POST(makeRequestFromIp(validPayload));
+      expect(res.status).toBe(201);
+    }
+    const blocked = await POST(makeRequestFromIp(validPayload));
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get("Retry-After")).toBeTruthy();
   });
 });
