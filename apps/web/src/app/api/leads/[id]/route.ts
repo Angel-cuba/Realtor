@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { db, leads, agents, userProfiles } from "@realtor/db";
+import { db, leads } from "@realtor/db";
 import { leadStatusUpdateSchema } from "@realtor/domain";
+import { getAgentForClerkUser } from "@/lib/agent";
 
 const idSchema = z.string().uuid();
 
@@ -16,13 +17,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [agentProfile] = await db
-    .select({ id: userProfiles.id })
-    .from(userProfiles)
-    .innerJoin(agents, eq(agents.userProfileId, userProfiles.id))
-    .where(eq(userProfiles.clerkUserId, userId))
-    .limit(1);
-
+  const agentProfile = await getAgentForClerkUser(userId);
   if (!agentProfile) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

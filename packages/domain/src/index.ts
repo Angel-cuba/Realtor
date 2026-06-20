@@ -62,6 +62,49 @@ export const leadInputSchema = z.object({
 
 export type LeadInput = z.infer<typeof leadInputSchema>;
 
+export const listingStatusLabels: Record<ListingStatus, string> = {
+  draft: "Borrador",
+  pending_review: "En revision",
+  published: "Publicada",
+  reserved: "Reservada",
+  under_contract: "En contrato",
+  sold: "Vendida",
+  rented: "Rentada",
+  archived: "Archivada"
+};
+
+export const listingInputSchema = z.object({
+  title: z.string().min(4).max(160),
+  listingType: z.enum(listingTypes),
+  propertyType: z.enum(propertyTypes),
+  price: z.number().int().positive().max(2_000_000_000),
+  currency: z.enum(["USD", "EUR"]),
+  summary: z.string().min(10).max(2000),
+  tags: z.array(z.string().min(1).max(40)).max(12).default([]),
+  highlights: z.array(z.string().min(1).max(120)).max(12).default([]),
+  addressLine1: z.string().min(3).max(200),
+  addressLine2: z.string().max(200).optional().or(z.literal("")),
+  city: z.string().min(2).max(120),
+  neighborhood: z.string().min(2).max(120),
+  region: z.string().max(120).optional().or(z.literal("")),
+  postalCode: z.string().max(20).optional().or(z.literal("")),
+  country: z.string().min(2).max(80),
+  beds: z.number().int().min(0).max(50),
+  baths: z.number().int().min(0).max(50),
+  areaSqft: z.number().int().positive().max(1_000_000),
+  lotSqft: z.number().int().positive().max(10_000_000).optional()
+});
+
+export type ListingInput = z.infer<typeof listingInputSchema>;
+
+export const listingStatusUpdateSchema = z.object({
+  status: z.enum(listingStatuses)
+});
+
+export function listingStatusLabel(status: string) {
+  return listingStatusLabels[status as ListingStatus] ?? status;
+}
+
 export type PropertyListing = {
   slug: string;
   title: string;

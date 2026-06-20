@@ -3,9 +3,15 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "paths": {
-      "@realtor/domain": ["../../packages/domain/src"],
-      "@realtor/domain/*": ["../../packages/domain/src/*"]
+      "@realtor/domain": [
+        "../../packages/domain/src"
+      ],
+      "@realtor/domain/*": [
+        "../../packages/domain/src/*"
+      ]
     }
   },
-  "include": ["app", "expo-env.d.ts"]
+  "include": [
+    "app"
+  ]
 }

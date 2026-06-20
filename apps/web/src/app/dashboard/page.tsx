@@ -2,7 +2,7 @@ import { count, desc, eq, or } from "drizzle-orm";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { UploadCloud } from "lucide-react";
+import { Building2, UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
 import { LeadsTable } from "@/components/leads-table";
 
@@ -55,13 +55,22 @@ export default async function DashboardPage({
               {user?.firstName ? `Hola, ${user.firstName}` : "Panel de agente"}
             </h1>
           </div>
-          <Link
-            className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
-            href="/dashboard/upload"
-          >
-            <UploadCloud size={17} aria-hidden />
-            Subir fotos
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              className="inline-flex items-center justify-center gap-2 rounded border border-black/15 px-5 py-3 text-sm font-semibold transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+              href="/dashboard/listings"
+            >
+              <Building2 size={17} aria-hidden />
+              Propiedades
+            </Link>
+            <Link
+              className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+              href="/dashboard/upload"
+            >
+              <UploadCloud size={17} aria-hidden />
+              Subir fotos
+            </Link>
+          </div>
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
