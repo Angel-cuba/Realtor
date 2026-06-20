@@ -18,7 +18,8 @@ Premium real estate platform for Spanish-speaking markets — property listings,
 │   └── mobile/       — Expo Router companion app for listing discovery and lead capture
 ├── packages/
 │   ├── domain/       — Shared TypeScript types, Zod schemas, formatters
-│   └── db/           — Drizzle ORM schema, client, seed script
+│   ├── db/           — Drizzle ORM schema, client, seed script
+│   └── i18n/         — Shared ES/EN message dictionaries, getMessages(), t() helper
 └── drizzle.config.ts — Reads DATABASE_URL from apps/web/.env.local
 ```
 
@@ -193,27 +194,26 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S10 — Listings CRUD | ✅ Shipped | Dashboard listings table, status pills, transactional `POST /api/listings`, `PATCH /api/listings/[slug]` for status, new listing form |
 | S11 — Lead detail + notes + filters | ✅ Shipped | `/dashboard/leads/[id]` with notes feed, `POST /api/leads/[id]/notes`, server-side status/intent/q filters preserving pagination |
 | S12 — Hardening | ✅ Shipped | In-memory IP rate limit on `POST /api/leads` (10 req / 10 min), Vercel BotID enablement guide, Supabase RLS policy docs |
+| S13 — i18n ES/EN | ✅ Shipped | `@realtor/i18n` package with typed `Messages`, full ES/EN dictionaries, `getMessages()`, `t()` interpolation; cookie-based locale on web (server reads `next/headers`, client gets `LocaleProvider`); AsyncStorage persistence on mobile; `LocaleSwitcher` in web header; language toggle in mobile Profile screen |
 
-## Next roadmap: S13 i18n ES/EN
+## Next roadmap: S14 — Saved listings + user preferences
 
-Goal: add Spanish and English language support without duplicating routes or drifting copy across web and mobile.
+Goal: allow signed-in users to bookmark listings (heart button on cards), persist saves to the database, and display them in the Saved tab on mobile and a `/saved` page on web.
 
 Recommended implementation order:
 
-1. Create a shared `packages/i18n` workspace with typed message dictionaries for `es` and `en`.
-2. Move reusable labels first: nav items, listing intent labels, form labels, validation copy, dashboard statuses, and empty/loading states.
-3. Add locale detection and persistence on web via URL or cookie, then expose a compact language switcher in the header.
-4. Add the same dictionary access pattern to mobile, with locale stored locally and a language control under Perfil.
-5. Keep money/date formatting locale-aware through shared helpers, defaulting to Spanish until the user chooses English.
+1. Add a `saved_listings` table (`user_id`, `listing_id`, `created_at`) in the Drizzle schema and generate a migration.
+2. Expose `POST /api/saved` and `DELETE /api/saved/[slug]` routes — Clerk-gated, validated with Zod.
+3. Add a heart toggle button to `PropertyCard` (web) and the listing card on mobile — optimistic update, then sync.
+4. Wire `/saved` on web (`/comprar`-style grid, showing only saved items for the signed-in user).
+5. Wire the Saved tab on mobile — currently shows an empty state; connect to `GET /api/saved`.
 
 Acceptance gates:
 
 - `npm run typecheck`
-- `npm run lint`
 - `npm run test --workspace @realtor/web`
 - `npm run build --workspace @realtor/web`
-- `npm run build --workspace @realtor/mobile`
-- Manual smoke: switch ES/EN on home, buy/rent listings, property detail lead form, mobile explore, and mobile profile.
+- Manual smoke: save a listing signed-in, reload, confirm it persists; unsave, confirm it disappears; test signed-out state (heart shown but greyed, redirects to sign-in on tap).
 
 ## Security & hardening
 
