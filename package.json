@@ -12,7 +12,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "npm run dev:web",
+    "dev:all": "turbo dev",
     "dev:web": "npm run dev --workspace @realtor/web",
     "dev:mobile": "npm run dev --workspace @realtor/mobile",
     "build": "turbo build",
@@ -30,11 +31,18 @@
   },
   "overrides": {
     "electron-to-chromium": "1.5.374",
-    "react-native": "0.85.3"
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-safe-area-context": "5.7.0"
   },
   "devDependencies": {
     "@vercel/config": "0.5.2",
     "prettier": "3.8.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-safe-area-context": "5.7.0",
     "turbo": "2.9.18",
     "typescript": "6.0.3"
   }
