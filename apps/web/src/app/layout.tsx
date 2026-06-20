@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-      <html lang="es" className={`${fraunces.variable} ${geist.variable}`}>
+      <html lang="es" className={`${fraunces.variable} ${geist.variable}`} data-scroll-behavior="smooth">
         <body className="font-sans">
           <SiteHeader />
           <div className="pb-20 md:pb-0">{children}</div>

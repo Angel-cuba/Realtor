@@ -15,7 +15,7 @@ Premium real estate platform for Spanish-speaking markets — property listings,
 /
 ├── apps/
 │   ├── web/          — Next.js 16 App Router (primary app)
-│   └── mobile/       — Expo companion app (not active yet)
+│   └── mobile/       — Expo Router companion app for listing discovery and lead capture
 ├── packages/
 │   ├── domain/       — Shared TypeScript types, Zod schemas, formatters
 │   └── db/           — Drizzle ORM schema, client, seed script
@@ -57,6 +57,40 @@ npm run db:seed
 # 5. Start the dev server
 npm run dev:web   # http://localhost:3000
 ```
+
+## Mobile app
+
+The Expo app in `apps/mobile` is wired to the same public listing and lead APIs
+as the web app. It includes:
+
+- Explore screen with sale/rent switching and local city/neighborhood search
+- Property detail screen backed by `GET /api/listings/[slug]`
+- Lead submission to `POST /api/leads`
+- Clerk provider setup with Secure Store token persistence
+
+```bash
+# Start the Next.js API/web app first
+npm run dev:web
+
+# In another terminal, start Expo
+npm run dev:mobile
+
+# Platform shortcuts
+npm run ios --workspace @realtor/mobile
+npm run android --workspace @realtor/mobile
+```
+
+Mobile environment values live in `apps/mobile/.env`:
+
+| Variable | Purpose |
+|----------|---------|
+| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key for the Expo app |
+| `EXPO_PUBLIC_API_URL` | Base URL for the web/API app (`http://localhost:3000` on iOS simulator, `http://10.0.2.2:3000` on Android emulator) |
+
+The mobile workspace uses a custom native entrypoint (`apps/mobile/index.native.js`)
+that initializes React Native globals before Expo Router. Keep this in place so
+Hermes has `FormData`, `URL`, and related globals available before Expo/Clerk
+runtime modules load.
 
 ## Environment variables
 
