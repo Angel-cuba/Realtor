@@ -74,26 +74,28 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             </p>
           </div>
 
-          <div className="grid gap-4 border-b border-black/10 py-6 sm:grid-cols-4">
+          <div className="flex flex-col gap-5 border-b border-black/10 py-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-3xl font-semibold">
+              <p className="font-display text-4xl font-medium tracking-tight">
                 {formatMoney(listing.price, listing.currency)}
-                <span className="text-sm text-black/50">{priceSuffix}</span>
+                <span className="ml-1 align-baseline text-base font-sans text-black/50">{priceSuffix}</span>
               </p>
-              <p className="mt-1 text-sm text-black/45">Listing price</p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-black/55">Listing price</p>
             </div>
-            <span className="inline-flex items-center gap-2 text-black/70">
-              <BedDouble size={18} aria-hidden />
-              {listing.beds || "-"} beds
-            </span>
-            <span className="inline-flex items-center gap-2 text-black/70">
-              <Bath size={18} aria-hidden />
-              {listing.baths || "-"} baths
-            </span>
-            <span className="inline-flex items-center gap-2 text-black/70">
-              <Square size={18} aria-hidden />
-              {listing.areaSqft.toLocaleString()} sqft
-            </span>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-black/70">
+              <span className="inline-flex items-center gap-2">
+                <BedDouble size={18} aria-hidden />
+                {listing.beds || "-"} beds
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Bath size={18} aria-hidden />
+                {listing.baths || "-"} baths
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Square size={18} aria-hidden />
+                {listing.areaSqft.toLocaleString()} sqft
+              </span>
+            </div>
           </div>
 
           <div className="py-6">

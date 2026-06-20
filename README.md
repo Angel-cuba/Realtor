@@ -82,14 +82,38 @@ All variables live in `apps/web/.env.local`. Never commit this file.
 ## Database commands
 
 ```bash
-npm run db:generate   # regenerate Drizzle migration files after schema changes
-npm run db:studio     # open Drizzle Studio (visual DB browser)
-npm run db:seed       # seed 6 fixture listings with agents and media rows
+npm run db:generate     # regenerate Drizzle migration files after schema changes
+npm run db:studio       # open Drizzle Studio (visual DB browser)
+npm run db:seed         # seed 6 fixture listings with agents and media rows
+npm run db:seed-extra   # idempotent: load 30 demo listings across 8 cities
 
 # Web tests
 npm run test --workspace @realtor/web       # Vitest, single run
 npm run test:watch --workspace @realtor/web # watch mode
 ```
+
+## Testing the search (sample cities)
+
+After running `npm run db:seed && npm run db:seed-extra` the database contains
+**35 published listings across 13 cities**, so the search on `/comprar` and
+`/rentar` always returns results. Use these for QA, demos, and pre-launch
+checks:
+
+| City | Neighborhoods | Sale | Rent |
+|------|---------------|------|------|
+| **Miami** | Brickell · Wynwood · Coconut Grove | 4 | 2 |
+| **Madrid** | Salamanca · Malasana · Chamberi | 3 | 2 |
+| **Ciudad de Mexico** | Polanco · Roma Norte · Condesa | 3 | 2 |
+| **Buenos Aires** | Palermo · Recoleta | 2 | 2 |
+| **Bogota** | Chapinero · Usaquen | 2 | 1 |
+| **Medellin** | El Poblado · Laureles | 2 | 1 |
+| **Barcelona** | Eixample · Gracia | 2 | 1 |
+| **San Juan** | Condado · Old San Juan | 1 | 1 |
+| Austin · Chicago · Denver · Nashville · San Diego | (from base seed) | 2 | 2 |
+
+Quick smoke test from the home search: type any of `Miami`, `Madrid`, `Polanco`,
+`Brickell`, `Palermo`, `El Poblado`, `Eixample`, `Old San Juan` and hit search.
+Each query should return at least one card on the matching page.
 
 Schema tables (in FK order): `user_profiles → agents → properties → listings → property_media`, `leads`
 

@@ -151,7 +151,8 @@ export type PropertyListing = {
 };
 
 export function formatMoney(amount: number, currency: "USD" | "EUR" = "USD") {
-  return new Intl.NumberFormat("es-ES", {
+  const locale = currency === "EUR" ? "es-ES" : "en-US";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     maximumFractionDigits: 0
