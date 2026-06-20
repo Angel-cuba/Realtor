@@ -4,6 +4,7 @@ import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "r
 import { formatMoney, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
 import { AppChrome } from "../components/app-chrome";
 import { ListingsLoadingState } from "../components/loading-states";
+import { useLocale } from "../contexts/locale-context";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -30,6 +31,7 @@ type ListingPreview = Pick<
 
 export default function ExploreScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
+  const { messages: m } = useLocale();
   const [listings, setListings] = useState<ListingPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -52,14 +54,14 @@ export default function ExploreScreen() {
 
   if (loading) {
     return (
-      <AppChrome title="Explorar" eyebrow="Mercado activo">
+      <AppChrome title={m.mobile.explore} eyebrow={m.mobile.marketActive}>
         <ListingsLoadingState />
       </AppChrome>
     );
   }
 
   return (
-    <AppChrome title="Explorar" eyebrow="Mercado activo">
+    <AppChrome title={m.mobile.explore} eyebrow={m.mobile.marketActive}>
       <FlatList
         data={visibleListings}
         keyExtractor={(item) => item.slug}
@@ -69,20 +71,20 @@ export default function ExploreScreen() {
             <View style={styles.summaryRow}>
               <View style={styles.summaryCard}>
                 <Text style={styles.summaryValue}>{listings.length}</Text>
-                <Text style={styles.summaryLabel}>{type === "sale" ? "en venta" : "en renta"}</Text>
+                <Text style={styles.summaryLabel}>{type === "sale" ? m.mobile.saleBadge : m.mobile.rentBadge}</Text>
               </View>
               <View style={styles.summaryCardDark}>
                 <Text style={styles.summaryValueDark}>13</Text>
-                <Text style={styles.summaryLabelDark}>ciudades demo</Text>
+                <Text style={styles.summaryLabelDark}>{m.mobile.citiesDemo}</Text>
               </View>
             </View>
 
-            <Text style={styles.heroTitle}>Propiedades claras, listas para comparar.</Text>
-            <Text style={styles.heroCopy}>Busca por ciudad o barrio y revisa los datos clave sin ruido.</Text>
+            <Text style={styles.heroTitle}>{m.mobile.exploreTitle}</Text>
+            <Text style={styles.heroCopy}>{m.mobile.exploreCopy}</Text>
 
             <View style={styles.searchBox}>
               <TextInput
-                placeholder="Ciudad o barrio"
+                placeholder={m.mobile.searchPlaceholder}
                 placeholderTextColor="#777"
                 style={styles.input}
                 value={query}
@@ -92,7 +94,7 @@ export default function ExploreScreen() {
 
           </View>
         }
-        ListEmptyComponent={<Text style={styles.empty}>No hay resultados para esta busqueda.</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>{m.mobile.noResults}</Text>}
         renderItem={({ item }) => (
           <Link href={("/property/" + item.slug) as never} asChild>
             <Pressable style={styles.card}>
@@ -106,16 +108,16 @@ export default function ExploreScreen() {
                 <View style={styles.priceRow}>
                   <Text style={styles.price}>
                     {formatMoney(item.price, item.currency)}
-                    {item.listingType === "rent" ? "/mo" : ""}
+                    {item.listingType === "rent" ? m.listing.perMonth : ""}
                   </Text>
-                  <Text style={styles.typeBadge}>{item.listingType === "rent" ? "Renta" : "Venta"}</Text>
+                  <Text style={styles.typeBadge}>{item.listingType === "rent" ? m.listing.rentLabel : m.listing.saleLabel}</Text>
                 </View>
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.muted}>{item.neighborhood}, {item.city}</Text>
                 <View style={styles.facts}>
-                  <Text style={styles.fact}>{item.beds || "-"} beds</Text>
-                  <Text style={styles.fact}>{item.baths || "-"} baths</Text>
-                  <Text style={styles.fact}>{item.areaSqft.toLocaleString()} sqft</Text>
+                  <Text style={styles.fact}>{item.beds || "-"} {m.listing.beds}</Text>
+                  <Text style={styles.fact}>{item.baths || "-"} {m.listing.baths}</Text>
+                  <Text style={styles.fact}>{item.areaSqft.toLocaleString()} {m.listing.sqft}</Text>
                 </View>
               </View>
             </Pressable>

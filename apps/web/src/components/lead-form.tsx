@@ -103,7 +103,7 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
     <form action={submit} className={`${wrapperClasses} grid gap-3`}>
       <div>
         <h3 className="text-xl font-semibold">{title}</h3>
-        <p className="mt-1 text-sm text-black/55">{m.leadForm.signInPromptVisit}</p>
+        <p className="mt-1 text-sm text-black/55">{signInCopy}</p>
       </div>
       <input
         className="rounded border border-black/10 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
