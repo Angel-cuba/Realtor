@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
+import { useLocale } from "@/contexts/locale-context";
 
 export function LeadNotesForm({ leadId }: { leadId: string }) {
   const router = useRouter();
+  const { messages: m } = useLocale();
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export function LeadNotesForm({ leadId }: { leadId: string }) {
     });
 
     if (!res.ok) {
-      setError("No se pudo guardar la nota.");
+      setError(m.dashboard.noteSaveError);
       setSubmitting(false);
       return;
     }
@@ -36,7 +38,7 @@ export function LeadNotesForm({ leadId }: { leadId: string }) {
   return (
     <form onSubmit={handleSubmit} className="grid gap-3">
       <label className="grid gap-2">
-        <span className="text-sm font-medium">Nueva nota</span>
+        <span className="text-sm font-medium">{m.dashboard.newNote}</span>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -44,7 +46,7 @@ export function LeadNotesForm({ leadId }: { leadId: string }) {
           required
           minLength={2}
           maxLength={2000}
-          placeholder="Llamada hecha, dejó mensaje. Vuelvo a contactar el martes..."
+          placeholder={m.dashboard.notePlaceholder}
           className="rounded border border-black/10 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         />
       </label>
@@ -55,7 +57,7 @@ export function LeadNotesForm({ leadId }: { leadId: string }) {
         className="inline-flex w-fit items-center justify-center gap-2 rounded bg-ink px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:opacity-60"
       >
         <Send size={15} aria-hidden />
-        {submitting ? "Guardando..." : "Guardar nota"}
+        {submitting ? m.dashboard.saving : m.dashboard.saveNote}
       </button>
     </form>
   );

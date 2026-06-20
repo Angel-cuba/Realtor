@@ -108,7 +108,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {featured.map((listing) => (
-              <PropertyCard listing={listing} key={listing.slug} />
+              <PropertyCard listing={listing} key={listing.slug} messages={m} />
             ))}
           </div>
         </div>
