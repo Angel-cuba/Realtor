@@ -112,6 +112,10 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S4 — Image upload | ✅ Shipped | UploadThing for property media, upload UI at `/dashboard/upload` |
 | S5 — Lead status | ✅ Shipped | `PATCH /api/leads/[id]`, interactive status dropdown with optimistic update |
 | S6 — Leads pagination | ✅ Shipped | Server-side `LIMIT/OFFSET` pagination, `COUNT` queries for stats, `?page=` URL param |
+| S7a — API tests | ✅ Shipped | Vitest suite: 15 tests for `POST /api/leads` and `PATCH /api/leads/[id]` |
+| S7b — Listings pagination | ✅ Shipped | `/comprar` and `/rentar` paginate at 24 items via `getListingsByType` |
+| S7c — Expo API layer | ⏳ Next | `GET /api/listings` + `GET /api/listings/[slug]` for mobile client |
+| S7d — Expo wiring | ⏳ Next | `ClerkProvider`, real data fetch, lead form submit |
 
 ## Deployment
 

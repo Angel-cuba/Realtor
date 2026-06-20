@@ -1,9 +1,14 @@
+import { ClerkProvider } from "@clerk/expo";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { tokenCache } from "../lib/token-cache";
 
 export default function RootLayout() {
   return (
-    <>
+    <ClerkProvider
+      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+      tokenCache={tokenCache}
+    >
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: "#f8f5ed" },
@@ -13,6 +18,6 @@ export default function RootLayout() {
         }}
       />
       <StatusBar style="dark" />
-    </>
+    </ClerkProvider>
   );
 }
