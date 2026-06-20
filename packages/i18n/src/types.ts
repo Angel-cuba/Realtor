@@ -244,6 +244,18 @@ export type Messages = {
     signInEyebrow: string;
     signInTitle: string;
     signInCopy: string;
+    createAccount: string;
+    email: string;
+    password: string;
+    verificationCode: string;
+    sendVerificationCode: string;
+    verifyEmail: string;
+    authSubmitting: string;
+    switchToSignIn: string;
+    switchToRegister: string;
+    authIncomplete: string;
+    authGenericError: string;
+    verificationCopy: string;
     savedStat: string;
     toursStat: string;
     alertsStat: string;
