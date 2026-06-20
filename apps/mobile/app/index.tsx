@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "expo-router";
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Link, useLocalSearchParams } from "expo-router";
+import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { formatMoney, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
 import { AppChrome } from "../components/app-chrome";
+import { ListingsLoadingState } from "../components/loading-states";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -28,10 +29,11 @@ type ListingPreview = Pick<
 >;
 
 export default function ExploreScreen() {
+  const params = useLocalSearchParams<{ type?: string }>();
   const [listings, setListings] = useState<ListingPreview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [type, setType] = useState<"sale" | "rent">("sale");
   const [query, setQuery] = useState("");
+  const type = params.type === "rent" ? "rent" : "sale";
 
   useEffect(() => {
     setLoading(true);
@@ -47,6 +49,14 @@ export default function ExploreScreen() {
     if (!q) return listings;
     return listings.filter((item) => (item.title + " " + item.city + " " + item.neighborhood).toLowerCase().includes(q));
   }, [listings, query]);
+
+  if (loading) {
+    return (
+      <AppChrome title="Explorar" eyebrow="Mercado activo">
+        <ListingsLoadingState />
+      </AppChrome>
+    );
+  }
 
   return (
     <AppChrome title="Explorar" eyebrow="Mercado activo">
@@ -80,19 +90,9 @@ export default function ExploreScreen() {
               />
             </View>
 
-            <View style={styles.segment}>
-              <Pressable onPress={() => setType("sale")} style={[styles.segmentButton, type === "sale" && styles.segmentActive]}>
-                <Text style={[styles.segmentText, type === "sale" && styles.segmentTextActive]}>Comprar</Text>
-              </Pressable>
-              <Pressable onPress={() => setType("rent")} style={[styles.segmentButton, type === "rent" && styles.segmentActive]}>
-                <Text style={[styles.segmentText, type === "rent" && styles.segmentTextActive]}>Rentar</Text>
-              </Pressable>
-            </View>
           </View>
         }
-        ListEmptyComponent={
-          loading ? <ActivityIndicator style={styles.loader} color="#8c6a00" /> : <Text style={styles.empty}>No hay resultados para esta busqueda.</Text>
-        }
+        ListEmptyComponent={<Text style={styles.empty}>No hay resultados para esta busqueda.</Text>}
         renderItem={({ item }) => (
           <Link href={("/property/" + item.slug) as never} asChild>
             <Pressable style={styles.card}>
@@ -140,11 +140,6 @@ const styles = StyleSheet.create({
   heroCopy: { color: "#5f5b52", fontSize: 15, lineHeight: 22 },
   searchBox: { backgroundColor: "#ffffff", borderRadius: 8, padding: 10, shadowColor: "#111111", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 18 },
   input: { borderColor: "rgba(17,17,17,0.12)", borderRadius: 8, borderWidth: 1, color: "#111111", padding: 14 },
-  segment: { backgroundColor: "rgba(17,17,17,0.06)", borderRadius: 8, flexDirection: "row", gap: 6, padding: 5 },
-  segmentButton: { alignItems: "center", borderRadius: 7, flex: 1, paddingVertical: 11 },
-  segmentActive: { backgroundColor: "#111111" },
-  segmentText: { color: "#555555", fontWeight: "900" },
-  segmentTextActive: { color: "#ffffff" },
   card: { backgroundColor: "#ffffff", borderRadius: 8, overflow: "hidden", shadowColor: "#111111", shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.10, shadowRadius: 24 },
   imageBlock: { backgroundColor: "#111111", height: 184, justifyContent: "flex-end" },
   image: { ...StyleSheet.absoluteFill },
@@ -158,6 +153,5 @@ const styles = StyleSheet.create({
   muted: { color: "#666666" },
   facts: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingTop: 6 },
   fact: { backgroundColor: "#f5f1e8", borderRadius: 6, color: "#333333", fontSize: 12, fontWeight: "800", overflow: "hidden", paddingHorizontal: 10, paddingVertical: 7 },
-  loader: { marginTop: 48 },
   empty: { color: "#777777", marginTop: 48, textAlign: "center" }
 });
