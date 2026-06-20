@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { leadStatuses, type LeadStatus } from "@realtor/domain";
+import { leadStatusClass } from "@/components/lead-status-pill";
 
 type DashboardLead = {
   id: string;
@@ -127,19 +128,22 @@ export function LeadsTable({ leads: initialLeads, page, totalPages }: LeadsTable
                 </td>
                 <td className="px-6 py-4">
                   <div className="grid gap-1">
-                    <select
-                      value={lead.status}
-                      disabled={isUpdating}
-                      onChange={(event) => handleStatusChange(lead.id, event.target.value as LeadStatus)}
-                      className="w-44 rounded border border-black/10 bg-transparent px-2 py-1 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-gold disabled:opacity-50"
-                    >
-                      {leadStatuses.map((status) => (
-                        <option key={status} value={status}>
-                          {statusLabel[status]}
-                        </option>
-                      ))}
-                    </select>
-                    {isUpdating ? <span className="text-xs text-black/45">Guardando...</span> : null}
+                    <span className={`inline-flex w-44 rounded px-2 py-1 text-xs font-medium transition-colors ${leadStatusClass(lead.status)} ${isUpdating ? "opacity-60" : ""}`}>
+                      <select
+                        value={lead.status}
+                        disabled={isUpdating}
+                        onChange={(event) => handleStatusChange(lead.id, event.target.value as LeadStatus)}
+                        aria-label={`Estado del lead ${lead.name}`}
+                        className="w-full cursor-pointer appearance-none bg-transparent text-inherit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+                      >
+                        {leadStatuses.map((status) => (
+                          <option key={status} value={status} className="bg-white text-ink">
+                            {statusLabel[status]}
+                          </option>
+                        ))}
+                      </select>
+                    </span>
+                    {isUpdating ? <span className="text-xs text-black/55">Guardando...</span> : null}
                     {didFail ? <span className="text-xs font-medium text-red-700">No se pudo actualizar.</span> : null}
                   </div>
                 </td>
