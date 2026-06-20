@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, BarChart3, CalendarDays, Home, KeyRound } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
 import { getMessages } from "@realtor/i18n";
 import { PropertyCard } from "@/components/property-card";
 import { PropertyImage } from "@/components/property-image";
 import { SearchPanel } from "@/components/search-panel";
 import { LeadForm } from "@/components/lead-form";
 import { getLocale } from "@/lib/locale";
-import { getFeaturedListings } from "@/lib/listings";
+import { getFeaturedListings, getSavedListingIds } from "@/lib/listings";
 import { propertyTypeLabel } from "@realtor/domain";
 
 const metricValues = ["4.9", "850+", "$5.8B"];
 
 export default async function HomePage() {
-  const [featured, locale] = await Promise.all([getFeaturedListings(), getLocale()]);
+  const [featured, locale, { userId }] = await Promise.all([getFeaturedListings(), getLocale(), auth()]);
+  const savedIds = await getSavedListingIds(userId);
   const m = getMessages(locale);
   const heroListing = featured[0];
   const ownerListing = featured[1] ?? featured[0];
@@ -108,7 +110,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {featured.map((listing) => (
-              <PropertyCard listing={listing} key={listing.slug} messages={m} />
+              <PropertyCard listing={listing} key={listing.slug} messages={m} isSaved={savedIds.has(listing.id)} />
             ))}
           </div>
         </div>

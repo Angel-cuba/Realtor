@@ -1,35 +1,16 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { and, asc, eq } from "drizzle-orm";
 import { getMessages } from "@realtor/i18n";
-import { agents, db, listings as listingsTable, properties, savedListings, userProfiles } from "@realtor/db";
 import { PropertyCard } from "@/components/property-card";
 import { getLocale } from "@/lib/locale";
-import { mapListingRows } from "@/lib/listings";
+import { getSavedListingsForUser } from "@/lib/listings";
 
 export default async function SavedPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const [locale] = await Promise.all([getLocale()]);
+  const [locale, listings] = await Promise.all([getLocale(), getSavedListingsForUser(userId)]);
   const m = getMessages(locale);
-
-  const rows = await db
-    .select({
-      listing: listingsTable,
-      property: properties,
-      agent: agents,
-      profile: userProfiles,
-    })
-    .from(savedListings)
-    .innerJoin(listingsTable, eq(savedListings.listingId, listingsTable.id))
-    .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
-    .leftJoin(agents, eq(listingsTable.agentId, agents.id))
-    .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
-    .where(and(eq(savedListings.userId, userId), eq(listingsTable.status, "published")))
-    .orderBy(asc(savedListings.createdAt));
-
-  const listings = await mapListingRows(rows);
 
   return (
     <main className="bg-linen">
