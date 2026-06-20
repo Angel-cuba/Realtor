@@ -49,7 +49,7 @@ export default async function BuyPage({
       <section className="bg-white py-12">
         <div className="mx-auto grid max-w-7xl gap-5 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-3 lg:px-8">
           {listings.length > 0 ? (
-            listings.map((listing) => <PropertyCard listing={listing} key={listing.slug} />)
+            listings.map((listing) => <PropertyCard listing={listing} key={listing.slug} messages={m} />)
           ) : (
             <p className="col-span-3 py-16 text-center text-black/45">{m.listing.noResults}</p>
           )}

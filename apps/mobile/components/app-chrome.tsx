@@ -121,7 +121,7 @@ export function AppChrome({ title = "Realtor", eyebrow = "Premium homes", showBa
           </View>
         </View>
         <Link href="/profile" asChild>
-          <Pressable accessibilityRole="button" accessibilityLabel="Abrir perfil" style={styles.avatar}>
+          <Pressable accessibilityRole="button" accessibilityLabel={messages.mobile.openProfile} style={styles.avatar}>
             {isSignedIn && userImage ? (
               <Image source={{ uri: userImage }} style={styles.avatarImage} />
             ) : (

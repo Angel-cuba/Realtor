@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Bath, BedDouble, MapPin, Square } from "lucide-react";
-import { formatMoney, listingTypeLabel, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
+import { formatMoney, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
+import type { Messages } from "@realtor/i18n";
 import { PropertyImage } from "@/components/property-image";
 
-export function PropertyCard({ listing }: { listing: PropertyListing }) {
-  const priceSuffix = listing.listingType === "rent" ? "/mo" : "";
+export function PropertyCard({ listing, messages }: { listing: PropertyListing; messages: Messages }) {
+  const priceSuffix = listing.listingType === "rent" ? messages.listing.perMonth : "";
+  const listingType = listing.listingType === "rent" ? messages.listing.rentLabel : messages.listing.saleLabel;
 
   return (
     <article className="overflow-hidden rounded border border-black/10 bg-white">
@@ -17,7 +19,7 @@ export function PropertyCard({ listing }: { listing: PropertyListing }) {
           className="object-cover transition duration-500 hover:scale-105"
         />
         <span className="absolute left-3 top-3 rounded bg-white px-3 py-1 text-xs font-semibold text-ink">
-          {listingTypeLabel(listing.listingType)}
+          {listingType}
         </span>
       </Link>
 
@@ -40,15 +42,15 @@ export function PropertyCard({ listing }: { listing: PropertyListing }) {
         <div className="grid grid-cols-3 gap-2 border-t border-black/10 pt-4 text-sm text-black/70">
           <span className="inline-flex items-center gap-2">
             <BedDouble size={16} aria-hidden />
-            {listing.beds || "-"} beds
+            {listing.beds || "-"} {messages.listing.beds}
           </span>
           <span className="inline-flex items-center gap-2">
             <Bath size={16} aria-hidden />
-            {listing.baths || "-"} baths
+            {listing.baths || "-"} {messages.listing.baths}
           </span>
           <span className="inline-flex items-center gap-2">
             <Square size={16} aria-hidden />
-            {listing.areaSqft.toLocaleString()} sqft
+            {listing.areaSqft.toLocaleString()} {messages.listing.sqft}
           </span>
         </div>
 

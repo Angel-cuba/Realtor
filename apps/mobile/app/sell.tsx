@@ -3,27 +3,27 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppChrome } from "../components/app-chrome";
 import { ProfileLoadingState } from "../components/loading-states";
+import { useLocale } from "../contexts/locale-context";
 
 export default function SellScreen() {
   const { isLoaded, isSignedIn } = useAuth();
+  const { messages: m } = useLocale();
 
   if (!isLoaded) {
     return (
-      <AppChrome title="Vender" eyebrow="Publicar">
+      <AppChrome title={m.mobile.sell} eyebrow={m.mobile.sellEyebrow}>
         <ProfileLoadingState />
       </AppChrome>
     );
   }
 
   return (
-    <AppChrome title="Vender" eyebrow="Publicar">
+    <AppChrome title={m.mobile.sell} eyebrow={m.mobile.sellEyebrow}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heroCard}>
-          <Text style={styles.kicker}>Propietarios</Text>
-          <Text style={styles.title}>Prepara tu propiedad para salir al mercado.</Text>
-          <Text style={styles.copy}>
-            Mobile funciona como viewer. Para coordinar una venta, conecta con tu cuenta y un asesor revisara los datos antes de publicar.
-          </Text>
+          <Text style={styles.kicker}>{m.mobile.sellKicker}</Text>
+          <Text style={styles.title}>{m.mobile.sellTitle}</Text>
+          <Text style={styles.copy}>{m.mobile.sellCopy}</Text>
         </View>
 
         <View style={styles.stepsCard}>
@@ -32,8 +32,8 @@ export default function SellScreen() {
               <Text style={styles.stepNumber}>1</Text>
             </View>
             <View style={styles.stepText}>
-              <Text style={styles.stepTitle}>Datos basicos</Text>
-              <Text style={styles.stepCopy}>Direccion, tipo de propiedad y rango esperado.</Text>
+              <Text style={styles.stepTitle}>{m.mobile.sellStep1Title}</Text>
+              <Text style={styles.stepCopy}>{m.mobile.sellStep1Copy}</Text>
             </View>
           </View>
           <View style={styles.stepRow}>
@@ -41,8 +41,8 @@ export default function SellScreen() {
               <Text style={styles.stepNumber}>2</Text>
             </View>
             <View style={styles.stepText}>
-              <Text style={styles.stepTitle}>Fotos y revision</Text>
-              <Text style={styles.stepCopy}>El equipo confirma calidad, precio y comparables.</Text>
+              <Text style={styles.stepTitle}>{m.mobile.sellStep2Title}</Text>
+              <Text style={styles.stepCopy}>{m.mobile.sellStep2Copy}</Text>
             </View>
           </View>
           <View style={styles.stepRow}>
@@ -50,25 +50,21 @@ export default function SellScreen() {
               <Text style={styles.stepNumber}>3</Text>
             </View>
             <View style={styles.stepText}>
-              <Text style={styles.stepTitle}>Publicacion</Text>
-              <Text style={styles.stepCopy}>La ficha queda lista para compradores y renters.</Text>
+              <Text style={styles.stepTitle}>{m.mobile.sellStep3Title}</Text>
+              <Text style={styles.stepCopy}>{m.mobile.sellStep3Copy}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.actionCard}>
-          <Text style={styles.actionTitle}>{isSignedIn ? "Cuenta lista" : "Inicia sesion para avanzar"}</Text>
-          <Text style={styles.actionCopy}>
-            {isSignedIn
-              ? "Tu asesor puede recibir la solicitud y continuar el alta desde dashboard."
-              : "Explorar es libre, pero vender requiere cuenta para proteger tus datos y dar seguimiento."}
-          </Text>
+          <Text style={styles.actionTitle}>{isSignedIn ? m.mobile.accountReady : m.mobile.signInToAdvance}</Text>
+          <Text style={styles.actionCopy}>{isSignedIn ? m.mobile.accountReadyCopy : m.mobile.signInToAdvanceCopy}</Text>
           <Pressable
             accessibilityRole="button"
             onPress={() => router.push(isSignedIn ? "/profile" : "/sign-in")}
             style={styles.cta}
           >
-            <Text style={styles.ctaText}>{isSignedIn ? "Ver perfil" : "Iniciar sesion"}</Text>
+            <Text style={styles.ctaText}>{isSignedIn ? m.mobile.viewProfile : m.mobile.signIn}</Text>
           </Pressable>
         </View>
       </ScrollView>

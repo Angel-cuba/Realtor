@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bath, BedDouble, CalendarDays, MapPin, Square } from "lucide-react";
 import { getMessages } from "@realtor/i18n";
-import { formatMoney, listingTypeLabel, propertyTypeLabel } from "@realtor/domain";
+import { formatMoney, propertyTypeLabel } from "@realtor/domain";
 import { LeadForm } from "@/components/lead-form";
 import { PropertyImage } from "@/components/property-image";
 import { getLocale } from "@/lib/locale";
@@ -26,6 +26,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
   const m = getMessages(locale);
   const priceSuffix = listing.listingType === "rent" ? m.listing.perMonth : "";
+  const listingType = listing.listingType === "rent" ? m.listing.rentLabel : m.listing.saleLabel;
   const gallerySlots = [listing.image, ...(listing.gallery ?? [])].slice(0, 3);
 
   return (
@@ -61,7 +62,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         <article className="rounded bg-white p-6 md:p-8">
           <div className="border-b border-black/10 pb-6">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">
-              {listingTypeLabel(listing.listingType)} / {propertyTypeLabel(listing.propertyType)}
+              {listingType} / {propertyTypeLabel(listing.propertyType)}
             </p>
             <h1 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight">{listing.title}</h1>
             <p className="mt-3 inline-flex items-center gap-2 text-black/55">

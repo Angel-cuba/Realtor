@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { t } from "@realtor/i18n";
 import { leadIntentLabel, leadStatusLabel, leadStatuses, type LeadStatus } from "@realtor/domain";
 import { leadStatusClass } from "@/components/lead-status-pill";
+import { useLocale } from "@/contexts/locale-context";
 
 type DashboardLead = {
   id: string;
@@ -22,8 +24,8 @@ type LeadsTableProps = {
   pageHrefBuilder?: (page: number) => string;
 };
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("es", {
+function formatDate(date: string, locale: string) {
+  return new Date(date).toLocaleDateString(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric"
@@ -32,6 +34,7 @@ function formatDate(date: string) {
 
 export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuilder }: LeadsTableProps) {
   const hrefFor = pageHrefBuilder ?? ((p: number) => `?page=${p}`);
+  const { locale, messages: m } = useLocale();
   const [leads, setLeads] = useState(initialLeads);
   const [pendingLeadId, setPendingLeadId] = useState<string | null>(null);
   const [failedLeadId, setFailedLeadId] = useState<string | null>(null);
@@ -43,9 +46,9 @@ export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuil
     () =>
       leads.map((lead) => ({
         ...lead,
-        formattedDate: formatDate(lead.createdAt)
+        formattedDate: formatDate(lead.createdAt, locale)
       })),
-    [leads]
+    [leads, locale]
   );
 
   function updateLocalStatus(leadId: string, status: LeadStatus) {
@@ -81,7 +84,7 @@ export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuil
   }
 
   if (leads.length === 0) {
-    return <p className="px-6 py-12 text-center text-black/45">Aun no hay leads registrados.</p>;
+    return <p className="px-6 py-12 text-center text-black/45">{m.dashboard.noLeads}</p>;
   }
 
   return (
@@ -89,12 +92,12 @@ export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuil
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-black/10 text-left text-xs font-semibold uppercase tracking-[0.14em] text-black/45">
-            <th className="px-6 py-3">Nombre</th>
-            <th className="px-6 py-3">Email</th>
-            <th className="px-6 py-3">Intencion</th>
-            <th className="px-6 py-3">Estado</th>
-            <th className="px-6 py-3">Score</th>
-            <th className="px-6 py-3">Fecha</th>
+            <th className="px-6 py-3">{m.dashboard.name}</th>
+            <th className="px-6 py-3">{m.dashboard.email}</th>
+            <th className="px-6 py-3">{m.dashboard.intent}</th>
+            <th className="px-6 py-3">{m.dashboard.status}</th>
+            <th className="px-6 py-3">{m.dashboard.score}</th>
+            <th className="px-6 py-3">{m.dashboard.date}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-black/[0.06]">
@@ -123,7 +126,7 @@ export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuil
                         value={lead.status}
                         disabled={isUpdating}
                         onChange={(event) => handleStatusChange(lead.id, event.target.value as LeadStatus)}
-                        aria-label={`Estado del lead ${lead.name}`}
+                        aria-label={t(m.dashboard.leadStatusLabel, { name: lead.name })}
                         className="w-full cursor-pointer appearance-none bg-transparent text-inherit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed"
                       >
                         {leadStatuses.map((status) => (
@@ -133,8 +136,8 @@ export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuil
                         ))}
                       </select>
                     </span>
-                    {isUpdating ? <span className="text-xs text-black/55">Guardando...</span> : null}
-                    {didFail ? <span className="text-xs font-medium text-red-700">No se pudo actualizar.</span> : null}
+                    {isUpdating ? <span className="text-xs text-black/55">{m.dashboard.saving}</span> : null}
+                    {didFail ? <span className="text-xs font-medium text-red-700">{m.dashboard.updateError}</span> : null}
                   </div>
                 </td>
                 <td className="px-6 py-4 font-semibold text-moss">{lead.score}</td>
@@ -148,20 +151,20 @@ export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuil
         <div className="flex items-center justify-between border-t border-black/10 px-6 py-4 text-sm">
           {page > 1 ? (
             <Link href={hrefFor(page - 1)} className="font-medium text-gold hover:underline">
-              ← Anterior
+              {m.listing.prev}
             </Link>
           ) : (
-            <span className="text-black/25">← Anterior</span>
+            <span className="text-black/25">{m.listing.prev}</span>
           )}
           <span className="text-black/45">
-            Página {page} de {totalPages}
+            {t(m.listing.pageOf, { page, total: totalPages })}
           </span>
           {page < totalPages ? (
             <Link href={hrefFor(page + 1)} className="font-medium text-gold hover:underline">
-              Siguiente →
+              {m.listing.next}
             </Link>
           ) : (
-            <span className="text-black/25">Siguiente →</span>
+            <span className="text-black/25">{m.listing.next}</span>
           )}
         </div>
       )}

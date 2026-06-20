@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-
-const links = [
-  { href: "/comprar", label: "Comprar" },
-  { href: "/rentar", label: "Rentar" },
-  { href: "/#sell", label: "Vender" },
-  { href: "/#market", label: "Mercado" },
-];
+import { useLocale } from "@/contexts/locale-context";
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const { messages: m } = useLocale();
+  const links = [
+    { href: "/comprar", label: m.nav.buy },
+    { href: "/rentar", label: m.nav.rent },
+    { href: "/#sell", label: m.nav.sell },
+    { href: "/#market", label: m.nav.market },
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -32,7 +33,7 @@ export function MobileMenu() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Abrir menu"
+        aria-label={m.nav.openMenu}
         aria-expanded={open}
         className="grid h-10 w-10 place-items-center rounded border border-black/15 transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 md:hidden"
       >
@@ -40,20 +41,20 @@ export function MobileMenu() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu de navegacion">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label={m.nav.menu}>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Cerrar menu"
+            aria-label={m.nav.closeMenu}
             className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
           />
           <div className="absolute right-0 top-0 flex h-full w-[88%] max-w-sm flex-col gap-8 bg-linen p-6 shadow-soft animate-in slide-in-from-right">
             <div className="flex items-center justify-between">
-              <p className="font-display text-2xl font-medium tracking-tight">Menu</p>
+              <p className="font-display text-2xl font-medium tracking-tight">{m.nav.menu}</p>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Cerrar menu"
+                aria-label={m.nav.closeMenu}
                 className="grid h-10 w-10 place-items-center rounded border border-black/15 transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               >
                 <X size={18} aria-hidden />
@@ -78,7 +79,7 @@ export function MobileMenu() {
               onClick={() => setOpen(false)}
               className="mt-auto inline-flex items-center justify-center rounded bg-ink px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
             >
-              Publicar propiedad
+              {m.nav.listProperty}
             </Link>
           </div>
         </div>

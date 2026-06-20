@@ -13,7 +13,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-black/10 bg-[#f8f5ed]/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link className="flex items-center gap-3 rounded font-semibold tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2" href="/" aria-label="Realtor — ir al inicio">
+        <Link className="flex items-center gap-3 rounded font-semibold tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2" href="/" aria-label={`Realtor - ${m.nav.home}`}>
           <span className="grid h-9 w-9 place-items-center rounded bg-ink text-gold">
             <Building2 size={19} aria-hidden />
           </span>

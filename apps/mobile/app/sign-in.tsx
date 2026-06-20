@@ -4,20 +4,22 @@ import { AuthView } from "@clerk/expo/native";
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { AppChrome } from "../components/app-chrome";
+import { useLocale } from "../contexts/locale-context";
 
 export default function SignInScreen() {
   const { isSignedIn } = useAuth();
+  const { messages: m } = useLocale();
 
   useEffect(() => {
     if (isSignedIn) router.replace("/profile");
   }, [isSignedIn]);
 
   return (
-    <AppChrome title="Sesion" eyebrow="Acceso">
+    <AppChrome title={m.mobile.signInTitleBar} eyebrow={m.mobile.signInEyebrow}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Entra para solicitar visitas.</Text>
-          <Text style={styles.copy}>Puedes explorar propiedades sin cuenta. Para comprar, rentar o contactar un asesor, inicia sesion.</Text>
+          <Text style={styles.title}>{m.mobile.signInTitle}</Text>
+          <Text style={styles.copy}>{m.mobile.signInCopy}</Text>
         </View>
         <View style={styles.authCard}>
           <AuthView mode="signInOrUp" />

@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { listingTypes, propertyTypes, propertyTypeLabel } from "@realtor/domain";
+import { useLocale } from "@/contexts/locale-context";
 
 type Currency = "USD" | "EUR";
 
 export function NewListingForm() {
   const router = useRouter();
+  const { messages: m } = useLocale();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldIssues, setFieldIssues] = useState<Record<string, string[]>>({});
@@ -57,7 +59,7 @@ export function NewListingForm() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data?.error ?? "No se pudo crear la propiedad.");
+        setError(data?.error ?? m.dashboard.createListingError);
         if (data?.issues?.fieldErrors) setFieldIssues(data.issues.fieldErrors);
         setSubmitting(false);
         return;
@@ -66,52 +68,52 @@ export function NewListingForm() {
       router.push("/dashboard/listings");
       router.refresh();
     } catch {
-      setError("Error de red. Intenta de nuevo.");
+      setError(m.dashboard.networkError);
       setSubmitting(false);
     }
   }
 
   return (
     <form action={handleSubmit} className="grid gap-6 rounded bg-white p-6 shadow-soft md:p-8">
-      <Section title="Resumen">
-        <Field label="Titulo" name="title" required issues={fieldIssues.title} />
+      <Section title={m.dashboard.summary}>
+        <Field label={m.dashboard.title} name="title" required issues={fieldIssues.title} />
         <div className="grid gap-4 md:grid-cols-2">
-          <SelectField label="Operacion" name="listingType" options={listingTypes.map((t) => ({ value: t, label: t === "sale" ? "Venta" : "Renta" }))} required />
-          <SelectField label="Tipo de propiedad" name="propertyType" options={propertyTypes.map((t) => ({ value: t, label: propertyTypeLabel(t) }))} required />
+          <SelectField label={m.dashboard.operation} name="listingType" options={listingTypes.map((t) => ({ value: t, label: t === "sale" ? m.listing.saleLabel : m.listing.rentLabel }))} placeholder={m.dashboard.select} required />
+          <SelectField label={m.dashboard.propertyType} name="propertyType" options={propertyTypes.map((t) => ({ value: t, label: propertyTypeLabel(t) }))} placeholder={m.dashboard.select} required />
         </div>
         <div className="grid gap-4 md:grid-cols-[1fr_120px]">
-          <Field label="Precio" name="price" type="number" min={1} required issues={fieldIssues.price} />
-          <SelectField label="Moneda" name="currency" options={[{ value: "USD", label: "USD" }, { value: "EUR", label: "EUR" }]} defaultValue="USD" />
+          <Field label={m.dashboard.price} name="price" type="number" min={1} required issues={fieldIssues.price} />
+          <SelectField label={m.dashboard.currency} name="currency" options={[{ value: "USD", label: "USD" }, { value: "EUR", label: "EUR" }]} defaultValue="USD" placeholder={m.dashboard.select} />
         </div>
-        <TextAreaField label="Resumen" name="summary" required minLength={10} maxLength={2000} issues={fieldIssues.summary} />
+        <TextAreaField label={m.dashboard.summary} name="summary" required minLength={10} maxLength={2000} issues={fieldIssues.summary} />
       </Section>
 
-      <Section title="Direccion">
-        <Field label="Direccion 1" name="addressLine1" required issues={fieldIssues.addressLine1} />
-        <Field label="Direccion 2 (opcional)" name="addressLine2" issues={fieldIssues.addressLine2} />
+      <Section title={m.dashboard.address}>
+        <Field label={m.dashboard.addressLine1} name="addressLine1" required issues={fieldIssues.addressLine1} />
+        <Field label={m.dashboard.addressLine2} name="addressLine2" issues={fieldIssues.addressLine2} />
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Ciudad" name="city" required issues={fieldIssues.city} />
-          <Field label="Barrio" name="neighborhood" required issues={fieldIssues.neighborhood} />
+          <Field label={m.dashboard.city} name="city" required issues={fieldIssues.city} />
+          <Field label={m.dashboard.neighborhood} name="neighborhood" required issues={fieldIssues.neighborhood} />
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          <Field label="Region (opcional)" name="region" />
-          <Field label="Codigo postal" name="postalCode" />
-          <Field label="Pais" name="country" required issues={fieldIssues.country} />
+          <Field label={m.dashboard.region} name="region" />
+          <Field label={m.dashboard.postalCode} name="postalCode" />
+          <Field label={m.dashboard.country} name="country" required issues={fieldIssues.country} />
         </div>
       </Section>
 
-      <Section title="Especificaciones">
+      <Section title={m.dashboard.specifications}>
         <div className="grid gap-4 md:grid-cols-4">
-          <Field label="Habitaciones" name="beds" type="number" min={0} required />
-          <Field label="Banos" name="baths" type="number" min={0} required />
-          <Field label="Area (sqft)" name="areaSqft" type="number" min={1} required />
-          <Field label="Lote (sqft, opcional)" name="lotSqft" type="number" min={1} />
+          <Field label={m.dashboard.beds} name="beds" type="number" min={0} required />
+          <Field label={m.dashboard.baths} name="baths" type="number" min={0} required />
+          <Field label={m.dashboard.area} name="areaSqft" type="number" min={1} required />
+          <Field label={m.dashboard.lot} name="lotSqft" type="number" min={1} />
         </div>
       </Section>
 
-      <Section title="Marketing">
-        <Field label="Tags (separados por coma)" name="tags" placeholder="Pool, Sea view, Recently renovated" />
-        <Field label="Highlights (separados por coma)" name="highlights" placeholder="Walk-in closet, Chef kitchen" />
+      <Section title={m.dashboard.marketing}>
+        <Field label={m.dashboard.tags} name="tags" placeholder="Pool, Sea view, Recently renovated" />
+        <Field label={m.dashboard.highlights} name="highlights" placeholder="Walk-in closet, Chef kitchen" />
       </Section>
 
       {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
@@ -122,14 +124,14 @@ export function NewListingForm() {
           disabled={submitting}
           className="inline-flex items-center justify-center gap-2 rounded bg-ink px-6 py-3 font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:opacity-60"
         >
-          {submitting ? "Guardando..." : "Crear propiedad"}
+          {submitting ? m.dashboard.saving : m.dashboard.createListing}
         </button>
         <button
           type="button"
           onClick={() => router.push("/dashboard/listings")}
           className="inline-flex items-center justify-center gap-2 rounded border border-black/15 px-6 py-3 font-semibold transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         >
-          Cancelar
+          {m.dashboard.cancel}
         </button>
       </div>
     </form>
@@ -203,9 +205,10 @@ type SelectProps = {
   options: { value: string; label: string }[];
   required?: boolean;
   defaultValue?: string;
+  placeholder: string;
 };
 
-function SelectField({ label, name, options, required, defaultValue }: SelectProps) {
+function SelectField({ label, name, options, required, defaultValue, placeholder }: SelectProps) {
   return (
     <label className="grid gap-1.5">
       <span className="text-sm font-medium">{label}{required && <span className="text-red-700"> *</span>}</span>
@@ -215,7 +218,7 @@ function SelectField({ label, name, options, required, defaultValue }: SelectPro
         defaultValue={defaultValue}
         className="rounded border border-black/10 bg-white px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
       >
-        <option value="">Seleccionar...</option>
+        <option value="">{placeholder}</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}

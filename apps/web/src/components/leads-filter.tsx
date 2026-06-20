@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { leadIntents, leadIntentLabel, leadStatuses, leadStatusLabel } from "@realtor/domain";
+import { useLocale } from "@/contexts/locale-context";
 
 type Props = {
   defaultStatus: string;
@@ -13,6 +14,7 @@ type Props = {
 
 export function LeadsFilter({ defaultStatus, defaultIntent, defaultQ }: Props) {
   const router = useRouter();
+  const { messages: m } = useLocale();
   const [status, setStatus] = useState(defaultStatus);
   const [intent, setIntent] = useState(defaultIntent);
   const [q, setQ] = useState(defaultQ);
@@ -45,20 +47,20 @@ export function LeadsFilter({ defaultStatus, defaultIntent, defaultQ }: Props) {
       className="grid gap-3 border-b border-black/10 px-6 py-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end"
     >
       <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">Buscar</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">{m.dashboard.search}</span>
         <div className="flex items-center gap-2 rounded border border-black/10 px-3">
           <Search size={15} className="text-black/45" aria-hidden />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Nombre o email"
+            placeholder={m.dashboard.nameOrEmail}
             className="w-full bg-transparent py-2 text-sm outline-none"
           />
         </div>
       </label>
 
       <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">Estado</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">{m.dashboard.status}</span>
         <select
           value={status}
           onChange={(e) => {
@@ -67,7 +69,7 @@ export function LeadsFilter({ defaultStatus, defaultIntent, defaultQ }: Props) {
           }}
           className="rounded border border-black/10 bg-white px-3 py-2 text-sm"
         >
-          <option value="">Todos</option>
+          <option value="">{m.dashboard.all}</option>
           {leadStatuses.map((s) => (
             <option key={s} value={s}>{leadStatusLabel(s)}</option>
           ))}
@@ -75,7 +77,7 @@ export function LeadsFilter({ defaultStatus, defaultIntent, defaultQ }: Props) {
       </label>
 
       <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">Intencion</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">{m.dashboard.intent}</span>
         <select
           value={intent}
           onChange={(e) => {
@@ -84,7 +86,7 @@ export function LeadsFilter({ defaultStatus, defaultIntent, defaultQ }: Props) {
           }}
           className="rounded border border-black/10 bg-white px-3 py-2 text-sm"
         >
-          <option value="">Todas</option>
+          <option value="">{m.dashboard.allFem}</option>
           {leadIntents.map((i) => (
             <option key={i} value={i}>{leadIntentLabel(i)}</option>
           ))}
@@ -98,14 +100,14 @@ export function LeadsFilter({ defaultStatus, defaultIntent, defaultQ }: Props) {
           className="inline-flex items-center justify-center gap-1 rounded border border-black/15 px-3 py-2 text-xs font-medium transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         >
           <X size={13} aria-hidden />
-          Limpiar
+          {m.dashboard.clear}
         </button>
       ) : (
         <button
           type="submit"
           className="inline-flex items-center justify-center rounded bg-ink px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         >
-          Buscar
+          {m.dashboard.search}
         </button>
       )}
     </form>
