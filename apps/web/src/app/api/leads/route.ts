@@ -2,8 +2,25 @@ import { NextResponse } from "next/server";
 import { leadInputSchema } from "@realtor/domain";
 import { db, leads } from "@realtor/db";
 import { sendNewLeadEmail } from "@/lib/email";
+import { checkRateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
+
+const LEAD_RATE_LIMIT = { limit: 10, windowMs: 10 * 60 * 1000 };
 
 export async function POST(request: Request) {
+  const ip = clientIpFromHeaders(request.headers);
+  const limit = checkRateLimit(`leads:${ip}`, LEAD_RATE_LIMIT);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta de nuevo en unos minutos." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 1000))),
+        },
+      }
+    );
+  }
+
   const payload = await request.json();
   const parsed = leadInputSchema.safeParse(payload);
 
