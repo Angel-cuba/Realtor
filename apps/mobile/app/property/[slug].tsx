@@ -5,6 +5,7 @@ import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View 
 import { formatMoney, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
 import { AppChrome } from "../../components/app-chrome";
 import { PropertyLoadingState } from "../../components/loading-states";
+import { useLocale } from "../../contexts/locale-context";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -15,6 +16,7 @@ function imageUri(src: string) {
 export default function PropertyScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { isLoaded, isSignedIn } = useAuth();
+  const { messages: m } = useLocale();
   const [listing, setListing] = useState<PropertyListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -38,7 +40,7 @@ export default function PropertyScreen() {
     }
 
     if (!name.trim() || !email.trim() || message.trim().length < 10) {
-      Alert.alert("Campos incompletos", "Completa nombre, email y un mensaje de al menos 10 caracteres.");
+      Alert.alert(m.mobile.incompleteTitle, m.mobile.incompleteBody);
       return;
     }
 
@@ -57,15 +59,15 @@ export default function PropertyScreen() {
       });
 
       if (res.ok) {
-        Alert.alert("Enviado", "Tu mensaje llego al agente. Te contactaremos pronto.");
+        Alert.alert(m.mobile.sentTitle, m.mobile.sentBody);
         setName("");
         setEmail("");
         setMessage("");
       } else {
-        Alert.alert("Error", "No se pudo enviar. Intenta de nuevo.");
+        Alert.alert(m.mobile.errorTitle, m.mobile.errorBody);
       }
     } catch {
-      Alert.alert("Error", "Sin conexion. Intenta de nuevo.");
+      Alert.alert(m.mobile.errorTitle, m.mobile.noConnectionBody);
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +75,7 @@ export default function PropertyScreen() {
 
   if (loading) {
     return (
-      <AppChrome title="Propiedad" eyebrow="Cargando detalle">
+      <AppChrome title={m.mobile.propertyTitle} eyebrow={m.mobile.loadingDetail} showBack>
         <PropertyLoadingState />
       </AppChrome>
     );
@@ -81,14 +83,14 @@ export default function PropertyScreen() {
 
   if (!listing) {
     return (
-      <AppChrome title="Propiedad" eyebrow="No encontrada">
-        <Text style={styles.notFound}>Propiedad no encontrada.</Text>
+      <AppChrome title={m.mobile.propertyTitle} eyebrow={m.mobile.notFoundEyebrow} showBack>
+        <Text style={styles.notFound}>{m.mobile.notFound}</Text>
       </AppChrome>
     );
   }
 
   return (
-    <AppChrome title="Detalle" eyebrow={listing.city}>
+    <AppChrome title={m.mobile.detailTitle} eyebrow={listing.city} showBack>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
           {listing.image ? <Image source={{ uri: imageUri(listing.image) }} style={styles.heroImage} /> : null}
@@ -100,19 +102,19 @@ export default function PropertyScreen() {
         <View style={styles.cardFeatured}>
           <Text style={styles.price}>
             {formatMoney(listing.price, listing.currency)}
-            {listing.listingType === "rent" ? "/mo" : ""}
+            {listing.listingType === "rent" ? m.listing.perMonth : ""}
           </Text>
           <Text style={styles.title}>{listing.title}</Text>
           <Text style={styles.muted}>{listing.addressSummary}</Text>
           <View style={styles.facts}>
-            <Text style={styles.fact}>{listing.beds} beds</Text>
-            <Text style={styles.fact}>{listing.baths} baths</Text>
-            <Text style={styles.fact}>{listing.areaSqft.toLocaleString()} sqft</Text>
+            <Text style={styles.fact}>{listing.beds} {m.listing.beds}</Text>
+            <Text style={styles.fact}>{listing.baths} {m.listing.baths}</Text>
+            <Text style={styles.fact}>{listing.areaSqft.toLocaleString()} {m.listing.sqft}</Text>
           </View>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Overview</Text>
+          <Text style={styles.sectionTitle}>{m.listing.overview}</Text>
           <Text style={styles.paragraph}>{listing.description}</Text>
           <View style={styles.highlights}>
             {listing.highlights.map((highlight) => (
@@ -122,28 +124,28 @@ export default function PropertyScreen() {
         </View>
 
         <View style={styles.cardDark}>
-          <Text style={styles.agentEyebrow}>Assigned agent</Text>
+          <Text style={styles.agentEyebrow}>{m.listing.assignedAgent}</Text>
           <Text style={styles.agentName}>{listing.agentName}</Text>
           <Text style={styles.agentTitle}>{listing.agentTitle}</Text>
         </View>
 
         {isLoaded && isSignedIn ? (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Solicitar visita</Text>
-            <TextInput placeholder="Nombre" placeholderTextColor="#777" value={name} onChangeText={setName} style={styles.input} />
-            <TextInput placeholder="Email" placeholderTextColor="#777" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" style={styles.input} />
-            <TextInput placeholder="Mensaje" placeholderTextColor="#777" value={message} onChangeText={setMessage} multiline style={[styles.input, styles.message]} />
+            <Text style={styles.sectionTitle}>{m.listing.requestVisit}</Text>
+            <TextInput placeholder={m.leadForm.name} placeholderTextColor="#777" value={name} onChangeText={setName} style={styles.input} />
+            <TextInput placeholder={m.leadForm.email} placeholderTextColor="#777" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" style={styles.input} />
+            <TextInput placeholder={m.leadForm.message} placeholderTextColor="#777" value={message} onChangeText={setMessage} multiline style={[styles.input, styles.message]} />
             <Pressable style={[styles.cta, submitting && styles.ctaDisabled]} onPress={handleSubmit} disabled={submitting} accessibilityRole="button">
-              <Text style={styles.ctaText}>{submitting ? "Enviando..." : "Enviar solicitud"}</Text>
+              <Text style={styles.ctaText}>{submitting ? m.leadForm.submitting : m.leadForm.submit}</Text>
             </Pressable>
           </View>
         ) : (
           <View style={styles.cardDark}>
-            <Text style={styles.agentEyebrow}>Acceso requerido</Text>
-            <Text style={styles.agentName}>Inicia sesion para solicitar visita.</Text>
-            <Text style={styles.agentTitle}>Puedes explorar propiedades sin cuenta. Para comprar, rentar o contactar al asesor, primero entra a tu cuenta.</Text>
+            <Text style={styles.agentEyebrow}>{m.mobile.accessRequired}</Text>
+            <Text style={styles.agentName}>{m.mobile.accessSignIn}</Text>
+            <Text style={styles.agentTitle}>{m.mobile.accessInfo}</Text>
             <Pressable style={styles.authCta} onPress={() => router.push("/sign-in")} accessibilityRole="button">
-              <Text style={styles.authCtaText}>Iniciar sesion</Text>
+              <Text style={styles.authCtaText}>{m.mobile.signIn}</Text>
             </Pressable>
           </View>
         )}

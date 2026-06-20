@@ -5,12 +5,6 @@ import { AppChrome } from "../components/app-chrome";
 import { ProfileLoadingState } from "../components/loading-states";
 import { useLocale } from "../contexts/locale-context";
 
-const stats = [
-  { label: "Guardadas", value: "12" },
-  { label: "Tours", value: "3" },
-  { label: "Alertas", value: "5" }
-];
-
 function ProfileGlyph() {
   return (
     <View style={styles.profileIconCanvas}>
@@ -26,10 +20,15 @@ export default function ProfileScreen() {
   const { user } = useUser();
   const { locale, messages: m, setLocale } = useLocale();
   const displayName = user?.fullName ?? user?.emailAddresses?.[0]?.emailAddress ?? "Cuenta Realtor";
+  const stats = [
+    { label: m.mobile.savedStat, value: "12" },
+    { label: m.mobile.toursStat, value: "3" },
+    { label: m.mobile.alertsStat, value: "5" }
+  ];
 
   if (!isLoaded) {
     return (
-      <AppChrome title={m.mobile.profile} eyebrow="Cuenta">
+      <AppChrome title={m.mobile.profile} eyebrow={m.mobile.accountLabel}>
         <ProfileLoadingState />
       </AppChrome>
     );
@@ -37,7 +36,7 @@ export default function ProfileScreen() {
 
   if (!isSignedIn) {
     return (
-      <AppChrome title={m.mobile.profile} eyebrow="Cuenta">
+      <AppChrome title={m.mobile.profile} eyebrow={m.mobile.accountLabel}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>{m.mobile.language}</Text>
@@ -54,9 +53,9 @@ export default function ProfileScreen() {
             </View>
           </View>
           <View style={styles.cardDark}>
-            <Text style={styles.agentLabel}>Acceso</Text>
-            <Text style={styles.agentName}>Explora libremente. Solicita visitas con cuenta.</Text>
-            <Text style={styles.agentCopy}>Para comprar, rentar o contactar un asesor desde mobile, inicia sesion primero.</Text>
+            <Text style={styles.agentLabel}>{m.mobile.signInEyebrow}</Text>
+            <Text style={styles.agentName}>{m.mobile.signInTitle}</Text>
+            <Text style={styles.agentCopy}>{m.mobile.signInCopy}</Text>
             <Pressable style={styles.cta} onPress={() => router.push("/sign-in")} accessibilityRole="button">
               <Text style={styles.ctaText}>{m.mobile.signIn}</Text>
             </Pressable>
@@ -67,7 +66,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <AppChrome title={m.mobile.profile} eyebrow="Cuenta">
+    <AppChrome title={m.mobile.profile} eyebrow={m.mobile.accountLabel}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heroCard}>
           <View style={styles.avatar}>
@@ -75,7 +74,7 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.profileText}>
             <Text style={styles.name}>{displayName}</Text>
-            <Text style={styles.role}>Cuenta activa</Text>
+            <Text style={styles.role}>{m.mobile.activeAccount}</Text>
           </View>
         </View>
 
@@ -89,17 +88,17 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Preferencias</Text>
+          <Text style={styles.sectionTitle}>{m.mobile.preferences}</Text>
           <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceLabel}>Ciudad objetivo</Text>
+            <Text style={styles.preferenceLabel}>{m.mobile.cityTarget}</Text>
             <Text style={styles.preferenceValue}>Miami</Text>
           </View>
           <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceLabel}>Presupuesto</Text>
+            <Text style={styles.preferenceLabel}>{m.mobile.budgetLabel}</Text>
             <Text style={styles.preferenceValue}>$750k - $1.2M</Text>
           </View>
           <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceLabel}>Tipo</Text>
+            <Text style={styles.preferenceLabel}>{m.mobile.typeLabel}</Text>
             <Text style={styles.preferenceValue}>House / Villa</Text>
           </View>
           <View style={[styles.preferenceRow, { borderTopColor: "rgba(17,17,17,0.08)", borderTopWidth: 1, paddingTop: 12 }]}>
@@ -116,11 +115,11 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.cardDark}>
-          <Text style={styles.agentLabel}>Asesor asignado</Text>
-          <Text style={styles.agentName}>Realtor advisor</Text>
-          <Text style={styles.agentCopy}>Listo para coordinar visitas y revisar comparables.</Text>
+          <Text style={styles.agentLabel}>{m.mobile.advisorLabel}</Text>
+          <Text style={styles.agentName}>{m.mobile.advisorName}</Text>
+          <Text style={styles.agentCopy}>{m.mobile.advisorCopy}</Text>
           <Pressable style={styles.cta}>
-            <Text style={styles.ctaText}>Contactar</Text>
+            <Text style={styles.ctaText}>{m.mobile.contact}</Text>
           </Pressable>
           <Pressable style={styles.secondaryCta} onPress={() => signOut()} accessibilityRole="button">
             <Text style={styles.secondaryCtaText}>{m.mobile.signOut}</Text>

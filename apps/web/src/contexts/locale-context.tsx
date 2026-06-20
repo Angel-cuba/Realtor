@@ -27,6 +27,7 @@ export function LocaleProvider({
     setLocaleState(next);
     setMessages(getMessages(next));
     document.cookie = `${LOCALE_COOKIE}=${next};path=/;max-age=31536000;samesite=lax`;
+    document.documentElement.lang = next;
   }, []);
 
   return (

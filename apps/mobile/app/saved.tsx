@@ -3,13 +3,15 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppChrome } from "../components/app-chrome";
 import { ProfileLoadingState } from "../components/loading-states";
+import { useLocale } from "../contexts/locale-context";
 
 export default function SavedScreen() {
   const { isLoaded, isSignedIn } = useAuth();
+  const { messages: m } = useLocale();
 
   if (!isLoaded) {
     return (
-      <AppChrome title="Guardados" eyebrow="Favoritos">
+      <AppChrome title={m.mobile.saved} eyebrow={m.mobile.savedEyebrow}>
         <ProfileLoadingState />
       </AppChrome>
     );
@@ -17,14 +19,14 @@ export default function SavedScreen() {
 
   if (!isSignedIn) {
     return (
-      <AppChrome title="Guardados" eyebrow="Favoritos">
+      <AppChrome title={m.mobile.saved} eyebrow={m.mobile.savedEyebrow}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.darkCard}>
-            <Text style={styles.kicker}>Favoritos</Text>
-            <Text style={styles.title}>Guarda propiedades y vuelve a compararlas cuando quieras.</Text>
-            <Text style={styles.copy}>Explorar es libre. Para guardar, comprar o rentar desde mobile, inicia sesion primero.</Text>
+            <Text style={styles.kicker}>{m.mobile.savedEyebrow}</Text>
+            <Text style={styles.title}>{m.mobile.savedSignedOutTitle}</Text>
+            <Text style={styles.copy}>{m.mobile.savedSignedOutCopy}</Text>
             <Pressable accessibilityRole="button" onPress={() => router.push("/sign-in")} style={styles.primaryCta}>
-              <Text style={styles.primaryCtaText}>Iniciar sesion</Text>
+              <Text style={styles.primaryCtaText}>{m.mobile.signIn}</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -33,16 +35,16 @@ export default function SavedScreen() {
   }
 
   return (
-    <AppChrome title="Guardados" eyebrow="Favoritos">
+    <AppChrome title={m.mobile.saved} eyebrow={m.mobile.savedEyebrow}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.emptyCard}>
           <View style={styles.savedMark}>
             <View style={styles.savedShape} />
           </View>
-          <Text style={styles.emptyTitle}>Todavia no hay guardados.</Text>
-          <Text style={styles.emptyCopy}>Cuando marques una propiedad, aparecera aqui para comparar precio, ciudad y detalles clave.</Text>
+          <Text style={styles.emptyTitle}>{m.mobile.savedEmptyTitle}</Text>
+          <Text style={styles.emptyCopy}>{m.mobile.savedEmptyCopy}</Text>
           <Pressable accessibilityRole="button" onPress={() => router.push("/?type=sale")} style={styles.secondaryCta}>
-            <Text style={styles.secondaryCtaText}>Explorar propiedades</Text>
+            <Text style={styles.secondaryCtaText}>{m.mobile.exploreProperties}</Text>
           </Pressable>
         </View>
       </ScrollView>

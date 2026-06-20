@@ -1,22 +1,47 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, BarChart3, CalendarDays, Home, KeyRound } from "lucide-react";
+import { getMessages } from "@realtor/i18n";
 import { PropertyCard } from "@/components/property-card";
 import { PropertyImage } from "@/components/property-image";
 import { SearchPanel } from "@/components/search-panel";
 import { LeadForm } from "@/components/lead-form";
+import { getLocale } from "@/lib/locale";
 import { getFeaturedListings } from "@/lib/listings";
 import { propertyTypeLabel } from "@realtor/domain";
 
-const metrics = [
-  { value: "4.9", label: "client rating" },
-  { value: "850+", label: "qualified leads tracked" },
-  { value: "$5.8B", label: "portfolio value advised" }
-];
+const metricValues = ["4.9", "850+", "$5.8B"];
 
 export default async function HomePage() {
-  const featured = await getFeaturedListings();
+  const [featured, locale] = await Promise.all([getFeaturedListings(), getLocale()]);
+  const m = getMessages(locale);
   const heroListing = featured[0];
   const ownerListing = featured[1] ?? featured[0];
+
+  const metrics = [
+    { value: metricValues[0], label: m.pages.homeMetric1 },
+    { value: metricValues[1], label: m.pages.homeMetric2 },
+    { value: metricValues[2], label: m.pages.homeMetric3 }
+  ];
+
+  const operatingCards = [
+    { icon: Home, title: m.pages.homeOperatingCard1Title, text: m.pages.homeOperatingCard1Text },
+    { icon: KeyRound, title: m.pages.homeOperatingCard2Title, text: m.pages.homeOperatingCard2Text },
+    { icon: CalendarDays, title: m.pages.homeOperatingCard3Title, text: m.pages.homeOperatingCard3Text },
+    { icon: BarChart3, title: m.pages.homeOperatingCard4Title, text: m.pages.homeOperatingCard4Text }
+  ];
+
+  const ownerBullets = [
+    m.pages.homeOwnersBullet1,
+    m.pages.homeOwnersBullet2,
+    m.pages.homeOwnersBullet3,
+    m.pages.homeOwnersBullet4
+  ];
+
+  const marketBullets = [
+    m.pages.homeMarketBullet1,
+    m.pages.homeMarketBullet2,
+    m.pages.homeMarketBullet3
+  ];
 
   return (
     <main>
@@ -24,13 +49,13 @@ export default async function HomePage() {
         <div className="mx-auto grid min-h-[calc(100svh-4rem)] max-w-7xl items-center gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
           <div className="relative z-10">
             <p className="mb-5 inline-flex rounded-full border border-black/10 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-black/55">
-              Buy, sell, rent
+              {m.pages.homeHeroBadge}
             </p>
             <h1 className="max-w-3xl text-balance font-display text-5xl font-medium leading-[0.95] tracking-tight text-ink md:text-7xl">
-              Encuentra tu proxima casa con asesores que conocen el mercado.
+              {m.pages.homeHeroTitle}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-black/65">
-              Propiedades verificadas, busqueda precisa y seguimiento comercial para compradores, renters y propietarios.
+              {m.pages.homeHeroCopy}
             </p>
             <div className="mt-8">
               <SearchPanel />
@@ -51,7 +76,7 @@ export default async function HomePage() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" aria-hidden />
             {heroListing && (
               <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-ink backdrop-blur">
-                Featured
+                {m.pages.homeFeaturedBadge}
               </div>
             )}
             <div className="absolute bottom-5 left-5 right-5 grid gap-4 rounded bg-white/92 p-5 backdrop-blur sm:grid-cols-3">
@@ -70,14 +95,14 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">Featured properties</p>
-              <h2 className="mt-3 max-w-2xl font-display text-4xl font-medium leading-tight tracking-tight">Casas, pisos y villas listas para visitas serias.</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">{m.pages.homeFeaturedKicker}</p>
+              <h2 className="mt-3 max-w-2xl font-display text-4xl font-medium leading-tight tracking-tight">{m.pages.homeFeaturedHeading}</h2>
             </div>
             <Link
               className="inline-flex items-center gap-2 rounded bg-ink px-5 py-3 font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               href="/comprar"
             >
-              Ver propiedades
+              {m.pages.homeViewAll}
               <ArrowRight size={17} aria-hidden />
             </Link>
           </div>
@@ -92,16 +117,11 @@ export default async function HomePage() {
       <section className="bg-ink py-16 text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">Operating model</p>
-            <h2 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight">Un sistema comercial para no perder oportunidades.</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">{m.pages.homeOperatingKicker}</p>
+            <h2 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight">{m.pages.homeOperatingHeading}</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            {[
-              { icon: Home, title: "Inventory verified", text: "Listings con estado, fotos, precio, disponibilidad y agente responsable." },
-              { icon: KeyRound, title: "Buyer intent", text: "Favoritos, busquedas y visitas alimentan prioridad comercial." },
-              { icon: CalendarDays, title: "Tours pipeline", text: "Solicitudes, agenda y seguimiento para acelerar decisiones." },
-              { icon: BarChart3, title: "Market clarity", text: "Paginas locales y datos para vender con pricing realista." }
-            ].map((item) => (
+            {operatingCards.map((item) => (
               <div className="rounded border border-white/10 bg-white/[0.04] p-5" key={item.title}>
                 <item.icon className="text-gold" size={24} aria-hidden />
                 <h3 className="mt-5 text-xl font-semibold">{item.title}</h3>
@@ -127,13 +147,11 @@ export default async function HomePage() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-ink/55 via-transparent to-transparent" aria-hidden />
           </div>
           <div className="flex flex-col justify-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">For owners</p>
-            <h2 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight">Vende o renta con una estrategia que mide demanda real.</h2>
-            <p className="mt-5 text-lg leading-8 text-black/65">
-              Captamos propietarios con valoracion, fotos, pipeline de leads, feedback de visitas y reporting para tomar decisiones a tiempo.
-            </p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">{m.pages.homeOwnersKicker}</p>
+            <h2 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight">{m.pages.homeOwnersHeading}</h2>
+            <p className="mt-5 text-lg leading-8 text-black/65">{m.pages.homeOwnersCopy}</p>
             <div className="mt-7 grid gap-3 text-sm text-black/70">
-              {["Pricing realista", "Marketing de listing", "Seguimiento de visitas", "Panel de propietario"].map((item) => (
+              {ownerBullets.map((item) => (
                 <span className="inline-flex items-center gap-2" key={item}>
                   <BadgeCheck size={17} className="text-moss" aria-hidden />
                   {item}
@@ -150,12 +168,12 @@ export default async function HomePage() {
       <section className="bg-white py-16" id="market">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded bg-ink p-8 text-white md:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">Market focus</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">{m.pages.homeMarketKicker}</p>
             <h2 className="mt-3 max-w-3xl font-display text-4xl font-medium leading-tight tracking-tight">
-              El producto nace para un mercado con compradores sensibles a precio y vendedores que necesitan precision.
+              {m.pages.homeMarketHeading}
             </h2>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {["SEO local por ciudad y barrio", "Lead scoring por intencion", "Comparacion compra vs renta"].map((item) => (
+              {marketBullets.map((item) => (
                 <div className="rounded border border-white/10 p-5" key={item}>
                   <p className="font-semibold">{item}</p>
                 </div>
