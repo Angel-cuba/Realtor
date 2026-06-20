@@ -9,14 +9,7 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: "#f8f5ed" },
-          headerTintColor: "#111111",
-          headerTitleStyle: { fontWeight: "700" },
-          contentStyle: { backgroundColor: "#f8f5ed" }
-        }}
-      />
+      <Stack screenOptions={{ headerShown: false }} />
       <StatusBar style="dark" />
     </ClerkProvider>
   );

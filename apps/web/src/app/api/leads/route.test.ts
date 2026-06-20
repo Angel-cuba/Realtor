@@ -65,7 +65,7 @@ describe("POST /api/leads", () => {
   });
 
   it("returns 400 when name is missing", async () => {
-    const { name: _n, ...rest } = validPayload;
+    const rest = { ...validPayload, name: "" };
     const res = await POST(makeRequest(rest));
     expect(res.status).toBe(400);
   });

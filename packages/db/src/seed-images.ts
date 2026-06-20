@@ -10,18 +10,20 @@ if (!process.env.DATABASE_URL) {
 }
 
 const { db, listings, propertyMedia } = await import("./index");
-const { eq, isNull, or } = await import("drizzle-orm");
+const { and, eq, inArray, isNull, like, or } = await import("drizzle-orm");
 
 const PHOTOS_PER_LISTING = 3;
+const HOUSE_IMAGES = Array.from({ length: 12 }, (_, index) => "/images/realtor/const-" + (index + 1) + ".webp");
 
 function deterministicId(seed: string) {
-  // md5 hex sliced into uuid-shape so it slots into the uuid column.
   const h = createHash("md5").update(seed).digest("hex");
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
+  return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20, 32);
 }
 
-function picsumUrl(slug: string, idx: number) {
-  return `https://picsum.photos/seed/${slug}-${idx}/1600/1100`;
+function imageForListing(slug: string, idx: number) {
+  const hash = createHash("md5").update(slug).digest("hex");
+  const start = Number.parseInt(hash.slice(0, 8), 16) % HOUSE_IMAGES.length;
+  return HOUSE_IMAGES[(start + idx) % HOUSE_IMAGES.length];
 }
 
 const published = await db
@@ -29,17 +31,35 @@ const published = await db
   .from(listings)
   .where(eq(listings.status, "published"));
 
+const publishedIds = published.map((listing) => listing.id);
 const rows = published.flatMap((listing) =>
   Array.from({ length: PHOTOS_PER_LISTING }, (_, idx) => ({
-    id: deterministicId(`${listing.slug}-${idx}`),
+    id: deterministicId(listing.slug + "-" + idx),
     listingId: listing.id,
-    url: picsumUrl(listing.slug, idx),
-    alt: `${listing.slug} — photo ${idx + 1}`,
+    url: imageForListing(listing.slug, idx),
+    alt: listing.slug + " property photo " + (idx + 1),
     sortOrder: idx,
   }))
 );
 
 try {
+  if (publishedIds.length > 0) {
+    await db
+      .delete(propertyMedia)
+      .where(
+        and(
+          inArray(propertyMedia.listingId, publishedIds),
+          or(
+            isNull(propertyMedia.url),
+            eq(propertyMedia.url, ""),
+            like(propertyMedia.url, "https://picsum.photos/%"),
+            like(propertyMedia.url, "https://fastly.picsum.photos/%"),
+            like(propertyMedia.url, "/images/realtor/const-%")
+          )
+        )
+      );
+  }
+
   for (const row of rows) {
     await db
       .insert(propertyMedia)
@@ -50,11 +70,7 @@ try {
       });
   }
 
-  await db
-    .delete(propertyMedia)
-    .where(or(isNull(propertyMedia.url), eq(propertyMedia.url, "")));
-
-  console.log(`Seeded ${rows.length} photos across ${published.length} published listings.`);
+  console.log("Seeded " + rows.length + " local home photos across " + published.length + " published listings.");
   process.exit(0);
 } catch (error) {
   console.error("Image seed failed:", error);

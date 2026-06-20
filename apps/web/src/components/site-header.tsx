@@ -19,6 +19,7 @@ export function SiteHeader() {
           <Link className="rounded transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2" href="/rentar">Rentar</Link>
           <Link className="rounded transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2" href="/#sell">Vender</Link>
           <Link className="rounded transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2" href="/#market">Mercado</Link>
+          <Link className="rounded transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2" href="/perfil">Perfil</Link>
         </nav>
 
         <div className="flex items-center gap-2">
