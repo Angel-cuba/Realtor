@@ -34,7 +34,7 @@ export default async function BuyPage({
     <main className="bg-linen">
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">Comprar</p>
-        <h1 className="mt-3 max-w-3xl text-5xl font-semibold leading-tight">
+        <h1 className="mt-3 max-w-3xl font-display text-5xl font-medium leading-tight tracking-tight">
           Propiedades en venta con informacion clara desde el primer click.
         </h1>
         <div className="mt-8">

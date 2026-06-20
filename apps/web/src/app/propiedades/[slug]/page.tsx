@@ -68,7 +68,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">
                 {listingTypeLabel(listing.listingType)} / {propertyTypeLabel(listing.propertyType)}
               </p>
-              <h1 className="mt-3 text-4xl font-semibold leading-tight">{listing.title}</h1>
+              <h1 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight">{listing.title}</h1>
               <p className="mt-3 inline-flex items-center gap-2 text-black/55">
                 <MapPin size={17} aria-hidden />
                 {listing.addressSummary}

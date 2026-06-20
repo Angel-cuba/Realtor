@@ -13,6 +13,10 @@ const config: Config = {
       },
       boxShadow: {
         soft: "0 24px 80px rgba(17, 17, 17, 0.10)"
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"]
       }
     }
   },
