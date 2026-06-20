@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@clerk/expo";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { formatMoney, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
 import { AppChrome } from "../../components/app-chrome";
 import { PropertyLoadingState } from "../../components/loading-states";
@@ -15,7 +15,7 @@ function imageUri(src: string) {
 
 export default function PropertyScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
   const { messages: m } = useLocale();
   const [listing, setListing] = useState<PropertyListing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +23,8 @@ export default function PropertyScreen() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savePending, setSavePending] = useState(false);
 
   useEffect(() => {
     fetch(API_URL + "/api/listings/" + slug)
@@ -31,6 +33,48 @@ export default function PropertyScreen() {
       .catch(() => setListing(null))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!isSignedIn || !listing) return;
+    getToken().then((token) => {
+      if (!token) return;
+      fetch(API_URL + "/api/saved", { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((data) => {
+          const ids: string[] = (data.listings ?? []).map((l: PropertyListing) => l.id);
+          setSaved(ids.includes(listing.id));
+        })
+        .catch(() => {});
+    });
+  }, [isSignedIn, listing, getToken]);
+
+  async function toggleSave() {
+    if (!listing) return;
+    if (!isSignedIn) { router.push("/sign-in"); return; }
+    if (savePending) return;
+    setSavePending(true);
+    const nextSaved = !saved;
+    setSaved(nextSaved);
+    try {
+      const token = await getToken();
+      if (nextSaved) {
+        await fetch(API_URL + "/api/saved", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ listingId: listing.id }),
+        });
+      } else {
+        await fetch(API_URL + "/api/saved/" + listing.id, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch {
+      setSaved(!nextSaved);
+    } finally {
+      setSavePending(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!listing) return;
@@ -100,10 +144,22 @@ export default function PropertyScreen() {
         </View>
 
         <View style={styles.cardFeatured}>
-          <Text style={styles.price}>
-            {formatMoney(listing.price, listing.currency)}
-            {listing.listingType === "rent" ? m.listing.perMonth : ""}
-          </Text>
+          <View style={styles.priceRow}>
+            <Text style={styles.price}>
+              {formatMoney(listing.price, listing.currency)}
+              {listing.listingType === "rent" ? m.listing.perMonth : ""}
+            </Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              aria-label={saved ? m.mobile.unsaveProperty : m.mobile.saveProperty}
+              onPress={toggleSave}
+              style={[styles.saveBtn, saved && styles.saveBtnActive]}
+            >
+              <Text style={[styles.saveBtnText, saved && styles.saveBtnTextActive]}>
+                {savePending ? m.mobile.saving : saved ? m.mobile.unsaveProperty : m.mobile.saveProperty}
+              </Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.title}>{listing.title}</Text>
           <Text style={styles.muted}>{listing.addressSummary}</Text>
           <View style={styles.facts}>
@@ -164,7 +220,12 @@ const styles = StyleSheet.create({
   card: { backgroundColor: "#ffffff", borderRadius: 8, gap: 12, padding: 18, shadowColor: "#111111", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 20 },
   cardFeatured: { backgroundColor: "#ffffff", borderRadius: 8, gap: 10, padding: 18, shadowColor: "#111111", shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.10, shadowRadius: 24 },
   cardDark: { backgroundColor: "#111111", borderRadius: 8, gap: 5, padding: 18, shadowColor: "#111111", shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.16, shadowRadius: 24 },
-  price: { color: "#111111", fontSize: 30, fontWeight: "900" },
+  priceRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
+  price: { color: "#111111", fontSize: 26, fontWeight: "900" },
+  saveBtn: { borderColor: "#111111", borderRadius: 8, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 8 },
+  saveBtnActive: { backgroundColor: "#111111" },
+  saveBtnText: { color: "#111111", fontWeight: "900" },
+  saveBtnTextActive: { color: "#ffffff" },
   title: { color: "#111111", fontSize: 25, fontWeight: "900", lineHeight: 30 },
   muted: { color: "#666666" },
   facts: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

@@ -47,6 +47,8 @@ export type Messages = {
     requestVisit: string;
     saleLabel: string;
     rentLabel: string;
+    saveProperty: string;
+    unsaveProperty: string;
   };
   leadForm: {
     titleVisit: string;
@@ -111,6 +113,12 @@ export type Messages = {
     homeMarketBullet1: string;
     homeMarketBullet2: string;
     homeMarketBullet3: string;
+    savedKicker: string;
+    savedHeading: string;
+    savedEmpty: string;
+    savedEmptyCopy: string;
+    savedSignIn: string;
+    savedSignInCopy: string;
   };
   profile: {
     title: string;
@@ -264,5 +272,8 @@ export type Messages = {
     typeLabel: string;
     advisorName: string;
     advisorCopy: string;
+    saveProperty: string;
+    unsaveProperty: string;
+    saving: string;
   };
 };

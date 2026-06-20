@@ -46,7 +46,9 @@ export const es: Messages = {
     assignedAgent: "Asesor asignado",
     requestVisit: "Solicitar visita",
     saleLabel: "Venta",
-    rentLabel: "Renta"
+    rentLabel: "Renta",
+    saveProperty: "Guardar propiedad",
+    unsaveProperty: "Quitar de guardados"
   },
   leadForm: {
     titleVisit: "Solicitar visita",
@@ -110,7 +112,13 @@ export const es: Messages = {
     homeMarketHeading: "El producto nace para un mercado con compradores sensibles a precio y vendedores que necesitan precision.",
     homeMarketBullet1: "SEO local por ciudad y barrio",
     homeMarketBullet2: "Lead scoring por intencion",
-    homeMarketBullet3: "Comparacion compra vs renta"
+    homeMarketBullet3: "Comparacion compra vs renta",
+    savedKicker: "Guardados",
+    savedHeading: "Propiedades que has marcado",
+    savedEmpty: "Todavia no tienes guardados.",
+    savedEmptyCopy: "Explora propiedades y guardalas para comparar despues.",
+    savedSignIn: "Inicia sesion para ver tus guardados",
+    savedSignInCopy: "Tus guardados se sincronizan entre web y mobile."
   },
   profile: {
     title: "Perfil",
@@ -263,6 +271,9 @@ export const es: Messages = {
     budgetLabel: "Presupuesto",
     typeLabel: "Tipo",
     advisorName: "Realtor advisor",
-    advisorCopy: "Listo para coordinar visitas y revisar comparables."
+    advisorCopy: "Listo para coordinar visitas y revisar comparables.",
+    saveProperty: "Guardar",
+    unsaveProperty: "Guardado",
+    saving: "Guardando..."
   }
 };

@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { getMessages, t } from "@realtor/i18n";
 import { PropertyCard } from "@/components/property-card";
 import { SearchPanel } from "@/components/search-panel";
 import { getLocale } from "@/lib/locale";
-import { filterListings, getListingsByType, LISTINGS_PAGE_SIZE } from "@/lib/listings";
+import { filterListings, getListingsByType, getSavedListingIds, LISTINGS_PAGE_SIZE } from "@/lib/listings";
 
 export default async function RentPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [params, locale] = await Promise.all([searchParams, getLocale()]);
+  const [params, locale, { userId }] = await Promise.all([searchParams, getLocale(), auth()]);
   const m = getMessages(locale);
 
   const q = (params.q as string | undefined) ?? "";
@@ -26,7 +27,10 @@ export default async function RentPage({
     return `/rentar?${sp.toString()}`;
   }
 
-  const { listings: raw, total } = await getListingsByType("rent", { page, pageSize: LISTINGS_PAGE_SIZE });
+  const [{ listings: raw, total }, savedIds] = await Promise.all([
+    getListingsByType("rent", { page, pageSize: LISTINGS_PAGE_SIZE }),
+    getSavedListingIds(userId),
+  ]);
   const listings = filterListings(raw, params);
   const totalPages = Math.max(1, Math.ceil(total / LISTINGS_PAGE_SIZE));
 
@@ -48,7 +52,14 @@ export default async function RentPage({
       <section className="bg-white py-12">
         <div className="mx-auto grid max-w-7xl gap-5 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-3 lg:px-8">
           {listings.length > 0 ? (
-            listings.map((listing) => <PropertyCard listing={listing} key={listing.slug} messages={m} />)
+            listings.map((listing) => (
+              <PropertyCard
+                key={listing.slug}
+                listing={listing}
+                messages={m}
+                isSaved={savedIds.has(listing.id)}
+              />
+            ))
           ) : (
             <p className="col-span-3 py-16 text-center text-black/45">{m.listing.noResults}</p>
           )}

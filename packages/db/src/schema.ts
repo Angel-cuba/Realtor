@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid
 } from "drizzle-orm/pg-core";
 import { leadIntents, leadStatuses, listingStatuses, listingTypes, propertyTypes } from "@realtor/domain";
@@ -104,3 +105,16 @@ export const leadNotes = pgTable("lead_notes", {
   body: text("body").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
 });
+
+export const savedListings = pgTable(
+  "saved_listings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull(),
+    listingId: uuid("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (table) => [
+    uniqueIndex("saved_listings_user_listing_unique").on(table.userId, table.listingId)
+  ]
+);

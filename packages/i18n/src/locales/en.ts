@@ -46,7 +46,9 @@ export const en: Messages = {
     assignedAgent: "Assigned agent",
     requestVisit: "Request a visit",
     saleLabel: "Sale",
-    rentLabel: "Rent"
+    rentLabel: "Rent",
+    saveProperty: "Save property",
+    unsaveProperty: "Remove from saved"
   },
   leadForm: {
     titleVisit: "Request a visit",
@@ -110,7 +112,13 @@ export const en: Messages = {
     homeMarketHeading: "Built for a market with price-sensitive buyers and sellers who need precision.",
     homeMarketBullet1: "Local SEO by city and neighborhood",
     homeMarketBullet2: "Lead scoring by intent",
-    homeMarketBullet3: "Buy vs rent comparison"
+    homeMarketBullet3: "Buy vs rent comparison",
+    savedKicker: "Saved",
+    savedHeading: "Properties you've bookmarked",
+    savedEmpty: "No saved properties yet.",
+    savedEmptyCopy: "Browse listings and save them to compare later.",
+    savedSignIn: "Sign in to see your saved properties",
+    savedSignInCopy: "Your saved properties sync across web and mobile."
   },
   profile: {
     title: "Profile",
@@ -263,6 +271,9 @@ export const en: Messages = {
     budgetLabel: "Budget",
     typeLabel: "Type",
     advisorName: "Realtor advisor",
-    advisorCopy: "Ready to coordinate visits and review comparables."
+    advisorCopy: "Ready to coordinate visits and review comparables.",
+    saveProperty: "Save",
+    unsaveProperty: "Saved",
+    saving: "Saving..."
   }
 };
