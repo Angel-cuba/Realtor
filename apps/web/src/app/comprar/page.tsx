@@ -1,6 +1,8 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PropertyCard } from "@/components/property-card";
 import { SearchPanel } from "@/components/search-panel";
-import { filterListings, getListingsByType } from "@/lib/listings";
+import { filterListings, getListingsByType, LISTINGS_PAGE_SIZE } from "@/lib/listings";
 
 export default async function BuyPage({
   searchParams,
@@ -8,9 +10,25 @@ export default async function BuyPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const listings = filterListings(await getListingsByType("sale"), params);
   const q = (params.q as string | undefined) ?? "";
   const budget = (params.budget as string | undefined) ?? "";
+  const page = Math.max(1, Math.floor(Number(params.page) || 1));
+
+  function pageHref(p: number) {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (budget) sp.set("budget", budget);
+    sp.set("page", String(p));
+    return `/comprar?${sp.toString()}`;
+  }
+
+  const { listings: raw, total } = await getListingsByType("sale", { page, pageSize: LISTINGS_PAGE_SIZE });
+  const listings = filterListings(raw, params);
+  const totalPages = Math.max(1, Math.ceil(total / LISTINGS_PAGE_SIZE));
+
+  if (page > totalPages && total > 0) {
+    redirect(pageHref(totalPages));
+  }
 
   return (
     <main className="bg-linen">
@@ -33,6 +51,27 @@ export default async function BuyPage({
             </p>
           )}
         </div>
+        {totalPages > 1 && (
+          <div className="mx-auto flex max-w-7xl items-center justify-between border-t border-black/10 px-4 pt-8 text-sm sm:px-6 lg:px-8">
+            {page > 1 ? (
+              <Link href={pageHref(page - 1)} className="font-medium text-gold hover:underline">
+                ← Anterior
+              </Link>
+            ) : (
+              <span className="text-black/25">← Anterior</span>
+            )}
+            <span className="text-black/45">
+              Página {page} de {totalPages}
+            </span>
+            {page < totalPages ? (
+              <Link href={pageHref(page + 1)} className="font-medium text-gold hover:underline">
+                Siguiente →
+              </Link>
+            ) : (
+              <span className="text-black/25">Siguiente →</span>
+            )}
+          </div>
+        )}
       </section>
     </main>
   );
