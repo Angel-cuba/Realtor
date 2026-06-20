@@ -1,17 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "paths": {
-      "@realtor/domain": [
-        "../../packages/domain/src"
-      ],
-      "@realtor/domain/*": [
-        "../../packages/domain/src/*"
-      ]
-    }
+    "jsx": "react-jsx"
   },
-  "include": [
-    "app"
-  ]
+  "include": ["app", "contexts", "components", "lib"]
 }
