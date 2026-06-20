@@ -5,14 +5,17 @@ vi.mock("@clerk/nextjs/server", () => ({
 }));
 
 vi.mock("@realtor/db", () => ({
-  db: { select: vi.fn(), update: vi.fn() },
+  db: { update: vi.fn() },
   leads: {},
-  agents: {},
-  userProfiles: {},
+}));
+
+vi.mock("@/lib/agent", () => ({
+  getAgentForClerkUser: vi.fn(),
 }));
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@realtor/db";
+import { getAgentForClerkUser } from "@/lib/agent";
 import { PATCH } from "./route";
 
 const VALID_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
@@ -37,12 +40,8 @@ function makeParams(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
-function mockAgentLookup(rows: unknown[]) {
-  const limitMock = vi.fn().mockResolvedValue(rows);
-  const whereMock = vi.fn().mockReturnValue({ limit: limitMock });
-  const innerJoinMock = vi.fn().mockReturnValue({ where: whereMock });
-  const fromMock = vi.fn().mockReturnValue({ innerJoin: innerJoinMock });
-  vi.mocked(db.select).mockReturnValue({ from: fromMock } as never);
+function mockAgentLookup(agent: { userProfileId: string; agentId: string } | null) {
+  vi.mocked(getAgentForClerkUser).mockResolvedValue(agent);
 }
 
 function mockLeadUpdate(rows: unknown[]) {
@@ -65,28 +64,28 @@ describe("PATCH /api/leads/[id]", () => {
 
   it("returns 403 when user has no agent profile", async () => {
     vi.mocked(auth).mockResolvedValue({ userId: "user_abc" } as never);
-    mockAgentLookup([]);
+    mockAgentLookup(null);
     const res = await PATCH(makeRequest({ status: "contacted" }), makeParams(VALID_UUID));
     expect(res.status).toBe(403);
   });
 
   it("returns 400 when id is not a valid UUID", async () => {
     vi.mocked(auth).mockResolvedValue({ userId: "user_abc" } as never);
-    mockAgentLookup([{ id: "profile-1" }]);
+    mockAgentLookup({ userProfileId: "profile-1", agentId: "agent-1" });
     const res = await PATCH(makeRequest({ status: "contacted" }), makeParams("not-a-uuid"));
     expect(res.status).toBe(400);
   });
 
   it("returns 400 when status is not a valid enum value", async () => {
     vi.mocked(auth).mockResolvedValue({ userId: "user_abc" } as never);
-    mockAgentLookup([{ id: "profile-1" }]);
+    mockAgentLookup({ userProfileId: "profile-1", agentId: "agent-1" });
     const res = await PATCH(makeRequest({ status: "invalid_status" }), makeParams(VALID_UUID));
     expect(res.status).toBe(400);
   });
 
   it("returns 200 with updated lead on valid request", async () => {
     vi.mocked(auth).mockResolvedValue({ userId: "user_abc" } as never);
-    mockAgentLookup([{ id: "profile-1" }]);
+    mockAgentLookup({ userProfileId: "profile-1", agentId: "agent-1" });
     mockLeadUpdate([mockLead]);
     const res = await PATCH(makeRequest({ status: "contacted" }), makeParams(VALID_UUID));
     expect(res.status).toBe(200);
@@ -96,7 +95,7 @@ describe("PATCH /api/leads/[id]", () => {
 
   it("returns 404 when lead does not exist", async () => {
     vi.mocked(auth).mockResolvedValue({ userId: "user_abc" } as never);
-    mockAgentLookup([{ id: "profile-1" }]);
+    mockAgentLookup({ userProfileId: "profile-1", agentId: "agent-1" });
     mockLeadUpdate([]);
     const res = await PATCH(makeRequest({ status: "contacted" }), makeParams(VALID_UUID));
     expect(res.status).toBe(404);
@@ -104,7 +103,7 @@ describe("PATCH /api/leads/[id]", () => {
 
   it("returns 500 when DB update throws", async () => {
     vi.mocked(auth).mockResolvedValue({ userId: "user_abc" } as never);
-    mockAgentLookup([{ id: "profile-1" }]);
+    mockAgentLookup({ userProfileId: "profile-1", agentId: "agent-1" });
     const whereMock = vi.fn().mockReturnValue({
       returning: vi.fn().mockRejectedValue(new Error("DB failure")),
     });

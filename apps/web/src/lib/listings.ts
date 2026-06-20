@@ -156,6 +156,27 @@ export async function getFeaturedListings() {
   return mapListingRows(rows);
 }
 
+export async function getListingsForAgent(agentId: string) {
+  const rows = await db
+    .select({
+      slug: listingsTable.slug,
+      title: listingsTable.title,
+      listingType: listingsTable.listingType,
+      status: listingsTable.status,
+      price: listingsTable.price,
+      currency: listingsTable.currency,
+      propertyType: properties.propertyType,
+      city: properties.city,
+      neighborhood: properties.neighborhood,
+    })
+    .from(listingsTable)
+    .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
+    .where(eq(listingsTable.agentId, agentId))
+    .orderBy(asc(listingsTable.title));
+
+  return rows;
+}
+
 export async function getPublishedListingSlugs() {
   const rows = await db
     .select({ slug: listingsTable.slug })
