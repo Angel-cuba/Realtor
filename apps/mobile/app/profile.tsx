@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { AppChrome } from "./_components/chrome";
+import { AppChrome } from "../components/app-chrome";
 
 const stats = [
   { label: "Guardadas", value: "12" },

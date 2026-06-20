@@ -1,5 +1,6 @@
 import { Link, usePathname } from "expo-router";
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const tabs = [
   { href: "/", label: "Explorar", match: "/" },
@@ -34,7 +35,7 @@ export function AppChrome({ title = "Realtor", eyebrow = "Premium homes", childr
           const active = tab.match === "/" ? pathname === "/" : pathname.startsWith(tab.match);
           return (
             <Link href={tab.href} asChild key={tab.href}>
-              <Pressable accessibilityRole="button" style={[styles.tab, active && styles.tabActive]}>
+              <Pressable accessibilityRole="button" style={StyleSheet.flatten([styles.tab, active && styles.tabActive])}>
                 <View style={[styles.tabDot, active && styles.tabDotActive]} />
                 <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{tab.label}</Text>
               </Pressable>

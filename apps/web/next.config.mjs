@@ -9,7 +9,8 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "ufs.sh" },
       { protocol: "https", hostname: "*.ufs.sh" },
-      { protocol: "https", hostname: "utfs.io" }
+      { protocol: "https", hostname: "utfs.io" },
+      { protocol: "https", hostname: "loremflickr.com" }
     ]
   },
   transpilePackages: ["@realtor/domain"]

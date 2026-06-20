@@ -13,17 +13,23 @@ const { db, listings, propertyMedia } = await import("./index");
 const { and, eq, inArray, isNull, like, or } = await import("drizzle-orm");
 
 const PHOTOS_PER_LISTING = 3;
-const HOUSE_IMAGES = Array.from({ length: 12 }, (_, index) => "/images/realtor/const-" + (index + 1) + ".webp");
+const IMAGE_WIDTH = 1280;
+const IMAGE_HEIGHT = 900;
+const IMAGE_KEYWORDS = "house,home,realestate";
 
 function deterministicId(seed: string) {
   const h = createHash("md5").update(seed).digest("hex");
   return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20, 32);
 }
 
-function imageForListing(slug: string, idx: number) {
-  const hash = createHash("md5").update(slug).digest("hex");
-  const start = Number.parseInt(hash.slice(0, 8), 16) % HOUSE_IMAGES.length;
-  return HOUSE_IMAGES[(start + idx) % HOUSE_IMAGES.length];
+function deterministicLock(seed: string) {
+  const h = createHash("md5").update(seed).digest("hex");
+  return (Number.parseInt(h.slice(0, 10), 16) % 2_000_000_000) + 1;
+}
+
+function houseImageUrl(slug: string, idx: number) {
+  const lock = deterministicLock(slug + "-" + idx);
+  return "https://loremflickr.com/" + IMAGE_WIDTH + "/" + IMAGE_HEIGHT + "/" + IMAGE_KEYWORDS + "?lock=" + lock;
 }
 
 const published = await db
@@ -36,8 +42,8 @@ const rows = published.flatMap((listing) =>
   Array.from({ length: PHOTOS_PER_LISTING }, (_, idx) => ({
     id: deterministicId(listing.slug + "-" + idx),
     listingId: listing.id,
-    url: imageForListing(listing.slug, idx),
-    alt: listing.slug + " property photo " + (idx + 1),
+    url: houseImageUrl(listing.slug, idx),
+    alt: listing.slug + " home photo " + (idx + 1),
     sortOrder: idx,
   }))
 );
@@ -54,6 +60,7 @@ try {
             eq(propertyMedia.url, ""),
             like(propertyMedia.url, "https://picsum.photos/%"),
             like(propertyMedia.url, "https://fastly.picsum.photos/%"),
+            like(propertyMedia.url, "https://loremflickr.com/%"),
             like(propertyMedia.url, "/images/realtor/const-%")
           )
         )
@@ -70,7 +77,7 @@ try {
       });
   }
 
-  console.log("Seeded " + rows.length + " local home photos across " + published.length + " published listings.");
+  console.log("Seeded " + rows.length + " remote home photos across " + published.length + " published listings.");
   process.exit(0);
 } catch (error) {
   console.error("Image seed failed:", error);
