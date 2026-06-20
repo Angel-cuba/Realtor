@@ -29,7 +29,8 @@
     "db:studio": "drizzle-kit studio --config drizzle.config.ts"
   },
   "overrides": {
-    "electron-to-chromium": "1.5.374"
+    "electron-to-chromium": "1.5.374",
+    "react-native": "0.85.3"
   },
   "devDependencies": {
     "@vercel/config": "0.5.2",

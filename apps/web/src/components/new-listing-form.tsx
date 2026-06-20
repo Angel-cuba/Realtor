@@ -65,7 +65,7 @@ export function NewListingForm() {
 
       router.push("/dashboard/listings");
       router.refresh();
-    } catch (err) {
+    } catch {
       setError("Error de red. Intenta de nuevo.");
       setSubmitting(false);
     }

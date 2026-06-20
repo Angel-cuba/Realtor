@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bath, BedDouble, CalendarDays, MapPin, Square } from "lucide-react";
 import { formatMoney, listingTypeLabel, propertyTypeLabel } from "@realtor/domain";
@@ -10,18 +11,10 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const listing = await getListingBySlug(slug);
-
-  if (!listing) return {};
-
-  return {
-    title: `${listing.title} | Realtor`,
-    description: listing.description,
-    ...(listing.image ? { openGraph: { images: [listing.image] } } : {})
-  };
-}
+export const metadata: Metadata = {
+  title: "Propiedad | Realtor",
+  description: "Detalle de propiedad con precio, ubicacion, galeria y contacto con asesor."
+};
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Fraunces, Geist } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import "@uploadthing/react/styles.css";
 import "./globals.css";
 
@@ -30,7 +31,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <html lang="es" className={`${fraunces.variable} ${geist.variable}`}>
         <body className="font-sans">
           <SiteHeader />
-          {children}
+          <div className="pb-20 md:pb-0">{children}</div>
+          <MobileBottomNav />
         </body>
       </html>
     </ClerkProvider>
