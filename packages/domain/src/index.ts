@@ -75,7 +75,7 @@ export type PropertyListing = {
 };
 
 export function formatMoney(amount: number, currency: "USD" | "EUR" = "USD") {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("es-ES", {
     style: "currency",
     currency,
     maximumFractionDigits: 0

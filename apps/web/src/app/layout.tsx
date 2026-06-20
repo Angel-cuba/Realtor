@@ -1,8 +1,24 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Fraunces, Geist } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import "@uploadthing/react/styles.css";
 import "./globals.css";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+  axes: ["opsz"]
+});
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+  weight: ["400", "500", "600", "700"]
+});
 
 export const metadata: Metadata = {
   title: "Realtor Platform | Buy, sell, and rent premium homes",
@@ -13,8 +29,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body>
+      <html lang="es" className={`${fraunces.variable} ${geist.variable}`}>
+        <body className="font-sans">
           <SiteHeader />
           {children}
         </body>
