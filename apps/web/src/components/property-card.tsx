@@ -2,9 +2,16 @@ import Link from "next/link";
 import { Bath, BedDouble, MapPin, Square } from "lucide-react";
 import { formatMoney, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
 import type { Messages } from "@realtor/i18n";
+import { HeartButton } from "@/components/heart-button";
 import { PropertyImage } from "@/components/property-image";
 
-export function PropertyCard({ listing, messages }: { listing: PropertyListing; messages: Messages }) {
+type Props = {
+  listing: PropertyListing;
+  messages: Messages;
+  isSaved?: boolean;
+};
+
+export function PropertyCard({ listing, messages, isSaved }: Props) {
   const priceSuffix = listing.listingType === "rent" ? messages.listing.perMonth : "";
   const listingType = listing.listingType === "rent" ? messages.listing.rentLabel : messages.listing.saleLabel;
 
@@ -21,6 +28,12 @@ export function PropertyCard({ listing, messages }: { listing: PropertyListing; 
         <span className="absolute left-3 top-3 rounded bg-white px-3 py-1 text-xs font-semibold text-ink">
           {listingType}
         </span>
+        <HeartButton
+          listingId={listing.id}
+          isSaved={isSaved ?? false}
+          saveLabel={messages.listing.saveProperty}
+          unsaveLabel={messages.listing.unsaveProperty}
+        />
       </Link>
 
       <div className="grid gap-4 p-4">

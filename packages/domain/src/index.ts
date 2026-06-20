@@ -127,6 +127,7 @@ export function listingStatusLabel(status: string) {
 }
 
 export type PropertyListing = {
+  id: string;
   slug: string;
   title: string;
   listingType: ListingType;

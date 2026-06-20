@@ -8,6 +8,13 @@
       "when": 1781776290943,
       "tag": "0000_lean_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781997467764,
+      "tag": "0001_bizarre_epoch",
+      "breakpoints": true
     }
   ]
 }

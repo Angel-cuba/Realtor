@@ -6,10 +6,11 @@ import {
   listings as listingsTable,
   properties,
   propertyMedia,
+  savedListings,
   userProfiles
 } from "@realtor/db";
 
-type ListingRow = {
+export type ListingRow = {
   listing: typeof listingsTable.$inferSelect;
   property: typeof properties.$inferSelect;
   agent: typeof agents.$inferSelect | null;
@@ -33,13 +34,14 @@ async function getMediaByListingId(listingIds: string[]) {
   }, new Map<string, string[]>());
 }
 
-async function mapListingRows(rows: ListingRow[]) {
+export async function mapListingRows(rows: ListingRow[]) {
   const mediaByListing = await getMediaByListingId(rows.map((row) => row.listing.id));
 
   return rows.map(({ agent, listing, profile, property }): PropertyListing => {
     const media = mediaByListing.get(listing.id) ?? [];
 
     return {
+      id: listing.id,
       slug: listing.slug,
       title: listing.title,
       listingType: listing.listingType,
@@ -185,6 +187,15 @@ export async function getPublishedListingSlugs() {
     .orderBy(asc(listingsTable.publishedAt), asc(listingsTable.slug));
 
   return rows.map((row) => row.slug);
+}
+
+export async function getSavedListingIds(userId: string | null): Promise<Set<string>> {
+  if (!userId) return new Set();
+  const rows = await db
+    .select({ listingId: savedListings.listingId })
+    .from(savedListings)
+    .where(eq(savedListings.userId, userId));
+  return new Set(rows.map((r) => r.listingId));
 }
 
 export function filterListings(
