@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { leadIntentLabel } from "@realtor/domain";
 
 type NewLeadEmail = {
   name: string;
@@ -10,16 +11,8 @@ type NewLeadEmail = {
   leadId: string;
 };
 
-const intentLabel: Record<string, string> = {
-  buy: "Compra",
-  rent: "Renta",
-  sell: "Venta",
-  lease_out: "Alquilar propiedad",
-  general: "General",
-};
-
 function buildEmail(lead: NewLeadEmail, siteUrl: string) {
-  const subject = `Nuevo lead: ${lead.name} — ${intentLabel[lead.intent] ?? lead.intent}`;
+  const subject = `Nuevo lead: ${lead.name} — ${leadIntentLabel(lead.intent)}`;
   const listingLine = lead.listingSlug
     ? `Listing: ${siteUrl}/propiedades/${lead.listingSlug}`
     : "Sin listing asociado";
@@ -29,7 +22,7 @@ function buildEmail(lead: NewLeadEmail, siteUrl: string) {
     `Nombre: ${lead.name}`,
     `Email: ${lead.email}`,
     lead.phone ? `Telefono: ${lead.phone}` : null,
-    `Intencion: ${intentLabel[lead.intent] ?? lead.intent}`,
+    `Intencion: ${leadIntentLabel(lead.intent)}`,
     listingLine,
     ``,
     `Mensaje:`,
@@ -48,7 +41,7 @@ function buildEmail(lead: NewLeadEmail, siteUrl: string) {
         <tr><td style="padding:6px 0;color:#555">Nombre</td><td style="padding:6px 0;font-weight:600">${lead.name}</td></tr>
         <tr><td style="padding:6px 0;color:#555">Email</td><td style="padding:6px 0;font-weight:600">${lead.email}</td></tr>
         ${lead.phone ? `<tr><td style="padding:6px 0;color:#555">Telefono</td><td style="padding:6px 0;font-weight:600">${lead.phone}</td></tr>` : ""}
-        <tr><td style="padding:6px 0;color:#555">Intencion</td><td style="padding:6px 0;font-weight:600">${intentLabel[lead.intent] ?? lead.intent}</td></tr>
+        <tr><td style="padding:6px 0;color:#555">Intencion</td><td style="padding:6px 0;font-weight:600">${leadIntentLabel(lead.intent)}</td></tr>
         ${lead.listingSlug ? `<tr><td style="padding:6px 0;color:#555">Listing</td><td style="padding:6px 0"><a href="${siteUrl}/propiedades/${lead.listingSlug}" style="color:#8c6a00">${lead.listingSlug}</a></td></tr>` : ""}
       </table>
       <div style="margin-top:24px;padding:16px;background:#f8f5ed;border-radius:6px;font-size:14px;line-height:1.6;white-space:pre-wrap">${lead.message}</div>

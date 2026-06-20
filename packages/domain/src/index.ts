@@ -39,6 +39,18 @@ export const leadIntents = ["buy", "rent", "sell", "lease_out", "general"] as co
 export type LeadIntent = (typeof leadIntents)[number];
 export const leadIntentSchema = z.enum(leadIntents);
 
+export const leadIntentLabels: Record<LeadIntent, string> = {
+  buy: "Compra",
+  rent: "Renta",
+  sell: "Venta",
+  lease_out: "Alquilar propiedad",
+  general: "General"
+};
+
+export function leadIntentLabel(intent: string) {
+  return leadIntentLabels[intent as LeadIntent] ?? intent;
+}
+
 export const leadInputSchema = z.object({
   name: z.string().min(2).max(120),
   email: z.string().email(),
