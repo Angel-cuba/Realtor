@@ -5,8 +5,13 @@ vi.mock("@realtor/db", () => ({
   leads: {},
 }));
 
+vi.mock("@/lib/email", () => ({
+  sendNewLeadEmail: vi.fn().mockResolvedValue({ sent: false, reason: "not-configured" }),
+}));
+
 import { POST } from "./route";
 import { db } from "@realtor/db";
+import { sendNewLeadEmail } from "@/lib/email";
 
 const validPayload = {
   name: "María García",
@@ -86,5 +91,32 @@ describe("POST /api/leads", () => {
 
     const res = await POST(makeRequest(validPayload));
     expect(res.status).toBe(500);
+  });
+
+  it("dispatches the new-lead email after a successful insert", async () => {
+    await POST(makeRequest({ ...validPayload, listingSlug: "hillcrest-villa" }));
+    expect(sendNewLeadEmail).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(sendNewLeadEmail).mock.calls[0][0]).toMatchObject({
+      leadId: "lead-uuid-1",
+      name: validPayload.name,
+      email: validPayload.email,
+      listingSlug: "hillcrest-villa",
+    });
+  });
+
+  it("still returns 201 when the email helper resolves with sent=false", async () => {
+    vi.mocked(sendNewLeadEmail).mockResolvedValueOnce({ sent: false, reason: "not-configured" });
+    const res = await POST(makeRequest(validPayload));
+    expect(res.status).toBe(201);
+  });
+
+  it("does not call the email helper when the insert fails", async () => {
+    const valuesMock = vi.fn().mockReturnValue({
+      returning: vi.fn().mockRejectedValue(new Error("DB failure")),
+    });
+    vi.mocked(db.insert).mockReturnValue({ values: valuesMock } as never);
+
+    await POST(makeRequest(validPayload));
+    expect(sendNewLeadEmail).not.toHaveBeenCalled();
   });
 });
