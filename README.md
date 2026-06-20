@@ -122,7 +122,7 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S7b — Listings pagination | ✅ Shipped | `/comprar` and `/rentar` paginate at 24 items via `getListingsByType` |
 | S7c — Expo API layer | ✅ Shipped | `GET /api/listings` + `GET /api/listings/[slug]` for mobile client |
 | S7d — Expo wiring | ✅ Shipped | `ClerkProvider`, real data fetch, lead form submit, status-filtered detail |
-| S8 — MVP polish | ⏳ Next | Editorial typography, hero asset, dashboard tightening, mobile menu, copy & a11y pass |
+| S8 — MVP polish | ✅ Shipped | Fraunces+Geist pairing, real hero images, mobile menu drawer, colored status pills, inline lead success state, es-ES money, a11y focus rings |
 
 ## Deployment
 
