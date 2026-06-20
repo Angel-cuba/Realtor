@@ -4,21 +4,10 @@ import { auth } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { db, leadNotes, leads, listings as listingsTable } from "@realtor/db";
-import { leadIntentLabel } from "@realtor/domain";
+import { leadIntentLabel, leadStatusLabel } from "@realtor/domain";
 import { LeadNotesForm } from "@/components/lead-notes-form";
 import { leadStatusClass } from "@/components/lead-status-pill";
 import { getAgentForClerkUser } from "@/lib/agent";
-
-const statusLabel: Record<string, string> = {
-  new: "Nuevo",
-  contacted: "Contactado",
-  qualified: "Calificado",
-  tour_scheduled: "Tour agendado",
-  offer_intent: "Intencion de oferta",
-  negotiating: "Negociando",
-  won: "Ganado",
-  lost: "Perdido",
-};
 
 function formatDate(d: Date | string) {
   return new Date(d).toLocaleString("es", {
@@ -76,7 +65,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
                 <p className="mt-1 text-sm text-black/55">Recibido el {formatDate(lead.createdAt)}</p>
               </div>
               <span className={`inline-flex rounded px-3 py-1.5 text-xs font-semibold ${leadStatusClass(lead.status)}`}>
-                {statusLabel[lead.status] ?? lead.status}
+                {leadStatusLabel(lead.status)}
               </span>
             </div>
 
