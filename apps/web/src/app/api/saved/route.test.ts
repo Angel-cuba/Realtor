@@ -18,6 +18,7 @@ vi.mock("@realtor/db", () => ({
 
 vi.mock("@/lib/listings", () => ({
   mapListingRows: vi.fn().mockResolvedValue([]),
+  getSavedListingsForUser: vi.fn().mockResolvedValue([]),
 }));
 
 import { GET, POST } from "./route";

@@ -198,6 +198,24 @@ export async function getSavedListingIds(userId: string | null): Promise<Set<str
   return new Set(rows.map((r) => r.listingId));
 }
 
+export async function getSavedListingsForUser(userId: string): Promise<PropertyListing[]> {
+  const rows = await db
+    .select({
+      listing: listingsTable,
+      property: properties,
+      agent: agents,
+      profile: userProfiles,
+    })
+    .from(savedListings)
+    .innerJoin(listingsTable, eq(savedListings.listingId, listingsTable.id))
+    .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
+    .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+    .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
+    .where(and(eq(savedListings.userId, userId), eq(listingsTable.status, "published")))
+    .orderBy(asc(savedListings.createdAt));
+  return mapListingRows(rows);
+}
+
 export function filterListings(
   items: PropertyListing[],
   params: Record<string, string | string[] | undefined>
