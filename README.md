@@ -81,6 +81,10 @@ All variables live in `apps/web/.env.local`. Never commit this file.
 npm run db:generate   # regenerate Drizzle migration files after schema changes
 npm run db:studio     # open Drizzle Studio (visual DB browser)
 npm run db:seed       # seed 6 fixture listings with agents and media rows
+
+# Web tests
+npm run test --workspace @realtor/web       # Vitest, single run
+npm run test:watch --workspace @realtor/web # watch mode
 ```
 
 Schema tables (in FK order): `user_profiles → agents → properties → listings → property_media`, `leads`
@@ -97,6 +101,8 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | `/dashboard/upload` | Photo upload UI (Clerk-protected) |
 | `/api/leads` | `POST` — validate with Zod, persist to DB |
 | `/api/leads/[id]` | `PATCH` — update lead status (agent-only, Zod-validated) |
+| `/api/listings` | `GET ?type=sale\|rent&page=N` — paginated public listings JSON |
+| `/api/listings/[slug]` | `GET` — published listing detail JSON for mobile/external clients |
 | `/api/uploadthing` | UploadThing file router endpoint |
 
 ## Phase history
@@ -114,8 +120,9 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S6 — Leads pagination | ✅ Shipped | Server-side `LIMIT/OFFSET` pagination, `COUNT` queries for stats, `?page=` URL param |
 | S7a — API tests | ✅ Shipped | Vitest suite: 15 tests for `POST /api/leads` and `PATCH /api/leads/[id]` |
 | S7b — Listings pagination | ✅ Shipped | `/comprar` and `/rentar` paginate at 24 items via `getListingsByType` |
-| S7c — Expo API layer | ⏳ Next | `GET /api/listings` + `GET /api/listings/[slug]` for mobile client |
-| S7d — Expo wiring | ⏳ Next | `ClerkProvider`, real data fetch, lead form submit |
+| S7c — Expo API layer | ✅ Shipped | `GET /api/listings` + `GET /api/listings/[slug]` for mobile client |
+| S7d — Expo wiring | ✅ Shipped | `ClerkProvider`, real data fetch, lead form submit, status-filtered detail |
+| S8 — MVP polish | ⏳ Next | Editorial typography, hero asset, dashboard tightening, mobile menu, copy & a11y pass |
 
 ## Deployment
 
