@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { leadStatuses, type LeadStatus } from "@realtor/domain";
+import { leadIntentLabel, leadStatuses, type LeadStatus } from "@realtor/domain";
 import { leadStatusClass } from "@/components/lead-status-pill";
 
 type DashboardLead = {
@@ -19,14 +19,6 @@ type LeadsTableProps = {
   leads: DashboardLead[];
   page: number;
   totalPages: number;
-};
-
-const intentLabel: Record<string, string> = {
-  buy: "Compra",
-  rent: "Renta",
-  sell: "Venta",
-  lease_out: "Alquilar propiedad",
-  general: "General"
 };
 
 const statusLabel: Record<LeadStatus, string> = {
@@ -124,7 +116,7 @@ export function LeadsTable({ leads: initialLeads, page, totalPages }: LeadsTable
                 <td className="px-6 py-4 font-medium">{lead.name}</td>
                 <td className="px-6 py-4 text-black/60">{lead.email}</td>
                 <td className="px-6 py-4">
-                  <span className="rounded bg-linen px-2 py-1 text-xs font-medium">{intentLabel[lead.intent] ?? lead.intent}</span>
+                  <span className="rounded bg-linen px-2 py-1 text-xs font-medium">{leadIntentLabel(lead.intent)}</span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="grid gap-1">
