@@ -56,7 +56,7 @@ export default async function DashboardPage({
             </h1>
           </div>
           <Link
-            className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 text-sm font-semibold text-white"
+            className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
             href="/dashboard/upload"
           >
             <UploadCloud size={17} aria-hidden />

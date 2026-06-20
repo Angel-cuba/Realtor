@@ -58,7 +58,7 @@ export default async function HomePage() {
               {metrics.map((metric) => (
                 <div key={metric.label}>
                   <p className="font-display text-3xl font-medium tracking-tight">{metric.value}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.16em] text-black/45">{metric.label}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.16em] text-black/55">{metric.label}</p>
                 </div>
               ))}
             </div>
@@ -73,7 +73,10 @@ export default async function HomePage() {
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">Featured properties</p>
               <h2 className="mt-3 max-w-2xl font-display text-4xl font-medium leading-tight tracking-tight">Casas, pisos y villas listas para visitas serias.</h2>
             </div>
-            <Link className="inline-flex items-center gap-2 rounded bg-ink px-5 py-3 font-semibold text-white" href="/comprar">
+            <Link
+              className="inline-flex items-center gap-2 rounded bg-ink px-5 py-3 font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+              href="/comprar"
+            >
               Ver propiedades
               <ArrowRight size={17} aria-hidden />
             </Link>

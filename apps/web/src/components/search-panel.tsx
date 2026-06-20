@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 
 type Props = {
   intent?: "buy" | "rent";
@@ -65,16 +65,12 @@ export function SearchPanel({ intent, defaultQ = "", defaultBudget = "" }: Props
           <option value="1m+">$1M+</option>
         </select>
       </label>
-      <button className="inline-flex items-center justify-center gap-2 rounded bg-gold px-5 py-3 font-semibold text-ink" type="submit">
+      <button
+        className="inline-flex items-center justify-center gap-2 rounded bg-gold px-5 py-3 font-semibold text-ink transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+        type="submit"
+      >
         <Search size={18} aria-hidden />
         Buscar
-      </button>
-      <button
-        className="inline-flex items-center justify-center gap-2 rounded border border-black/10 px-4 py-3 text-sm font-medium md:col-span-4"
-        type="button"
-      >
-        <SlidersHorizontal size={17} aria-hidden />
-        Filtros avanzados
       </button>
     </form>
   );
