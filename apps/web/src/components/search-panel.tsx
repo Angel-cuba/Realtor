@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { MapPin, Search } from "lucide-react";
+import { useLocale } from "@/contexts/locale-context";
 
 type Props = {
   intent?: "buy" | "rent";
@@ -11,6 +12,7 @@ type Props = {
 
 export function SearchPanel({ intent, defaultQ = "", defaultBudget = "" }: Props) {
   const router = useRouter();
+  const { messages: m } = useLocale();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -36,33 +38,33 @@ export function SearchPanel({ intent, defaultQ = "", defaultBudget = "" }: Props
       <label className="flex items-center gap-3 rounded border border-black/10 px-4 py-3">
         <MapPin className="text-gold" size={20} aria-hidden />
         <span className="grid flex-1 gap-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Ubicacion</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">{m.search.locationLabel}</span>
           <input
             name="q"
             defaultValue={defaultQ}
             className="min-w-0 bg-transparent text-sm outline-none"
-            placeholder="Ciudad, barrio o codigo postal"
+            placeholder={m.search.locationPlaceholder}
           />
         </span>
       </label>
       <label className="grid gap-1 rounded border border-black/10 px-4 py-3">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Operacion</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">{m.search.operationLabel}</span>
         <select
           name="operacion"
           defaultValue={intent === "rent" ? "rent" : "buy"}
           className="bg-transparent text-sm outline-none"
         >
-          <option value="buy">Comprar</option>
-          <option value="rent">Rentar</option>
+          <option value="buy">{m.search.operationBuy}</option>
+          <option value="rent">{m.search.operationRent}</option>
         </select>
       </label>
       <label className="grid gap-1 rounded border border-black/10 px-4 py-3">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Presupuesto</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">{m.search.budgetLabel}</span>
         <select name="budget" defaultValue={defaultBudget} className="bg-transparent text-sm outline-none">
-          <option value="">Cualquier precio</option>
-          <option value="500k">Hasta $500k</option>
-          <option value="1m">$500k - $1M</option>
-          <option value="1m+">$1M+</option>
+          <option value="">{m.search.budgetAny}</option>
+          <option value="500k">{m.search.budget500k}</option>
+          <option value="1m">{m.search.budget1m}</option>
+          <option value="1m+">{m.search.budget1mPlus}</option>
         </select>
       </label>
       <button
@@ -70,7 +72,7 @@ export function SearchPanel({ intent, defaultQ = "", defaultBudget = "" }: Props
         type="submit"
       >
         <Search size={18} aria-hidden />
-        Buscar
+        {m.search.submit}
       </button>
     </form>
   );

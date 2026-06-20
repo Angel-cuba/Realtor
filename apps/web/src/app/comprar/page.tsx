@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getMessages } from "@realtor/i18n";
+import { t } from "@realtor/i18n";
 import { PropertyCard } from "@/components/property-card";
 import { SearchPanel } from "@/components/search-panel";
+import { getLocale } from "@/lib/locale";
 import { filterListings, getListingsByType, LISTINGS_PAGE_SIZE } from "@/lib/listings";
 
 export default async function BuyPage({
@@ -9,7 +12,9 @@ export default async function BuyPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const [params, locale] = await Promise.all([searchParams, getLocale()]);
+  const m = getMessages(locale);
+
   const q = (params.q as string | undefined) ?? "";
   const budget = (params.budget as string | undefined) ?? "";
   const page = Math.max(1, Math.floor(Number(params.page) || 1));
@@ -33,9 +38,9 @@ export default async function BuyPage({
   return (
     <main className="bg-linen">
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">Comprar</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">{m.pages.buyKicker}</p>
         <h1 className="mt-3 max-w-3xl font-display text-5xl font-medium leading-tight tracking-tight">
-          Propiedades en venta con informacion clara desde el primer click.
+          {m.pages.buyHeading}
         </h1>
         <div className="mt-8">
           <SearchPanel intent="buy" defaultQ={q} defaultBudget={budget} />
@@ -46,29 +51,25 @@ export default async function BuyPage({
           {listings.length > 0 ? (
             listings.map((listing) => <PropertyCard listing={listing} key={listing.slug} />)
           ) : (
-            <p className="col-span-3 py-16 text-center text-black/45">
-              No hay propiedades que coincidan con tu busqueda.
-            </p>
+            <p className="col-span-3 py-16 text-center text-black/45">{m.listing.noResults}</p>
           )}
         </div>
         {totalPages > 1 && (
           <div className="mx-auto flex max-w-7xl items-center justify-between border-t border-black/10 px-4 pt-8 text-sm sm:px-6 lg:px-8">
             {page > 1 ? (
               <Link href={pageHref(page - 1)} className="font-medium text-gold hover:underline">
-                ← Anterior
+                {m.listing.prev}
               </Link>
             ) : (
-              <span className="text-black/25">← Anterior</span>
+              <span className="text-black/25">{m.listing.prev}</span>
             )}
-            <span className="text-black/45">
-              Página {page} de {totalPages}
-            </span>
+            <span className="text-black/45">{t(m.listing.pageOf, { page, total: totalPages })}</span>
             {page < totalPages ? (
               <Link href={pageHref(page + 1)} className="font-medium text-gold hover:underline">
-                Siguiente →
+                {m.listing.next}
               </Link>
             ) : (
-              <span className="text-black/25">Siguiente →</span>
+              <span className="text-black/25">{m.listing.next}</span>
             )}
           </div>
         )}

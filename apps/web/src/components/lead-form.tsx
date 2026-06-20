@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { CheckCircle2, Send } from "lucide-react";
+import { useLocale } from "@/contexts/locale-context";
 
 type LeadFormProps = {
   intent: "buy" | "rent" | "sell" | "lease_out" | "general";
@@ -14,12 +15,11 @@ type LeadFormProps = {
 export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const { isLoaded, isSignedIn } = useAuth();
+  const { messages: m } = useLocale();
 
   async function submit(formData: FormData) {
     if (!isSignedIn) return;
-
     setStatus("sending");
-
     const response = await fetch("/api/leads", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -32,19 +32,17 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
         listingSlug
       })
     });
-
     setStatus(response.ok ? "sent" : "error");
   }
 
+  const isSell = intent === "sell" || intent === "lease_out";
+  const title = isSell ? m.leadForm.titleAdvisor : m.leadForm.titleVisit;
+  const signInCopy = isSell ? m.leadForm.signInPromptAdvisor : m.leadForm.signInPromptVisit;
   const wrapperClasses = `rounded bg-white p-6 ${compact ? "" : "shadow-soft"}`;
-  const title = intent === "sell" || intent === "lease_out" ? "Habla con un asesor" : "Solicitar visita";
-  const copy = intent === "sell" || intent === "lease_out"
-    ? "Inicia sesion para coordinar la publicacion con un asesor."
-    : "Inicia sesion para solicitar disponibilidad, precio y proximos pasos.";
 
   if (!isLoaded) {
     return (
-      <div className={`${wrapperClasses} grid gap-4`} aria-busy="true" aria-label="Cargando formulario">
+      <div className={`${wrapperClasses} grid gap-4`} aria-busy="true" aria-label={m.leadForm.loadingLabel}>
         <div className="h-5 w-44 animate-pulse rounded bg-black/10" />
         <div className="h-4 w-64 max-w-full animate-pulse rounded bg-black/10" />
         {[0, 1, 2, 3].map((item) => (
@@ -63,14 +61,14 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
         </div>
         <div>
           <h3 className="text-xl font-semibold">{title}</h3>
-          <p className="mt-2 text-sm leading-6 text-black/60">{copy}</p>
+          <p className="mt-2 text-sm leading-6 text-black/60">{signInCopy}</p>
         </div>
         <SignInButton mode="modal">
           <button
             className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
             type="button"
           >
-            Iniciar sesion
+            {m.leadForm.signIn}
           </button>
         </SignInButton>
       </div>
@@ -78,8 +76,9 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
   }
 
   if (status === "sent") {
-    const nextHref = intent === "rent" ? "/rentar" : "/comprar";
-    const nextLabel = intent === "rent" ? "Ver mas rentas" : "Ver mas propiedades";
+    const successBody = intent === "rent" ? m.leadForm.successBodyRent : isSell ? m.leadForm.successBodySell : m.leadForm.successBodyBuy;
+    const backLabel = intent === "rent" ? m.leadForm.backToRent : listingSlug ? m.leadForm.backToHome : m.leadForm.backToBuy;
+    const backHref = intent === "rent" ? "/rentar" : listingSlug ? "/" : "/comprar";
 
     return (
       <div className={`${wrapperClasses} grid gap-4`}>
@@ -87,16 +86,14 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
           <CheckCircle2 size={22} aria-hidden />
         </div>
         <div>
-          <h3 className="font-display text-2xl font-medium tracking-tight">Solicitud recibida.</h3>
-          <p className="mt-2 text-sm leading-6 text-black/65">
-            Te contactaremos en menos de 24 horas con disponibilidad, precio y proximos pasos.
-          </p>
+          <h3 className="font-display text-2xl font-medium tracking-tight">{m.leadForm.successTitle}</h3>
+          <p className="mt-2 text-sm leading-6 text-black/65">{successBody}</p>
         </div>
         <Link
-          href={nextHref}
+          href={backHref}
           className="inline-flex items-center justify-center rounded border border-black/15 px-5 py-3 text-sm font-semibold transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         >
-          {nextLabel}
+          {backLabel}
         </Link>
       </div>
     );
@@ -106,34 +103,34 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
     <form action={submit} className={`${wrapperClasses} grid gap-3`}>
       <div>
         <h3 className="text-xl font-semibold">{title}</h3>
-        <p className="mt-1 text-sm text-black/55">Te contactamos con disponibilidad, precio y proximos pasos.</p>
+        <p className="mt-1 text-sm text-black/55">{m.leadForm.signInPromptVisit}</p>
       </div>
       <input
         className="rounded border border-black/10 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         name="name"
-        placeholder="Nombre"
-        aria-label="Nombre"
+        placeholder={m.leadForm.namePlaceholder}
+        aria-label={m.leadForm.name}
         required
       />
       <input
         className="rounded border border-black/10 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         name="email"
-        placeholder="Email"
-        aria-label="Email"
+        placeholder={m.leadForm.emailPlaceholder}
+        aria-label={m.leadForm.email}
         required
         type="email"
       />
       <input
         className="rounded border border-black/10 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         name="phone"
-        placeholder="Telefono"
-        aria-label="Telefono"
+        placeholder={m.leadForm.phonePlaceholder}
+        aria-label={m.leadForm.phone}
       />
       <textarea
         className="min-h-28 rounded border border-black/10 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         name="message"
-        placeholder="Cuentanos que estas buscando"
-        aria-label="Mensaje"
+        placeholder={m.leadForm.messagePlaceholder}
+        aria-label={m.leadForm.message}
         required
       />
       <button
@@ -143,9 +140,9 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
         type="submit"
       >
         <Send size={17} aria-hidden />
-        {status === "sending" ? "Enviando" : "Enviar solicitud"}
+        {status === "sending" ? m.leadForm.submitting : m.leadForm.submit}
       </button>
-      {status === "error" ? <p className="text-sm font-medium text-red-700">No se pudo enviar. Revisa los datos.</p> : null}
+      {status === "error" ? <p className="text-sm font-medium text-red-700">{m.leadForm.errorMessage}</p> : null}
     </form>
   );
 }

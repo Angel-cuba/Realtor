@@ -8,7 +8,9 @@
       "@realtor/domain": ["../../packages/domain/src"],
       "@realtor/domain/*": ["../../packages/domain/src/*"],
       "@realtor/db": ["../../packages/db/src"],
-      "@realtor/db/*": ["../../packages/db/src/*"]
+      "@realtor/db/*": ["../../packages/db/src/*"],
+      "@realtor/i18n": ["../../packages/i18n/src"],
+      "@realtor/i18n/*": ["../../packages/i18n/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

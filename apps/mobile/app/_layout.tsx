@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/expo";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { LocaleProvider } from "../contexts/locale-context";
 import { tokenCache } from "../lib/token-cache";
 
 export default function RootLayout() {
@@ -9,8 +10,10 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <Stack screenOptions={{ headerShown: false }} />
-      <StatusBar style="dark" />
+      <LocaleProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+        <StatusBar style="dark" />
+      </LocaleProvider>
     </ClerkProvider>
   );
 }

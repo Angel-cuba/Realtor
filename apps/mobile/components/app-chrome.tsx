@@ -1,23 +1,34 @@
 import { useAuth, useUser } from "@clerk/expo";
-import { Link, useLocalSearchParams, usePathname } from "expo-router";
+import { Link, router, useLocalSearchParams, usePathname } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocale } from "../contexts/locale-context";
 
-const tabs = [
-  { href: "/?type=sale", key: "buy", label: "Comprar", icon: "buy" },
-  { href: "/sell", key: "sell", label: "Vender", icon: "sell" },
-  { href: "/?type=rent", key: "rent", label: "Rentar", icon: "rent", raised: true },
-  { href: "/saved", key: "saved", label: "Guardados", icon: "saved" },
-  { href: "/profile", key: "profile", label: "Perfil", icon: "profile" }
+const tabKeys = [
+  { href: "/?type=sale", key: "buy", icon: "buy" },
+  { href: "/sell", key: "sell", icon: "sell" },
+  { href: "/?type=rent", key: "rent", icon: "rent", raised: true },
+  { href: "/saved", key: "saved", icon: "saved" },
+  { href: "/profile", key: "profile", icon: "profile" }
 ] as const;
 
-type IconName = (typeof tabs)[number]["icon"] | "user";
+type IconName = (typeof tabKeys)[number]["icon"] | "user";
 
 type AppChromeProps = {
   title?: string;
   eyebrow?: string;
+  showBack?: boolean;
   children: React.ReactNode;
 };
+
+function BackIcon() {
+  return (
+    <View style={styles.backIconCanvas}>
+      <View style={styles.backIconHead} />
+      <View style={styles.backIconStem} />
+    </View>
+  );
+}
 
 function NavIcon({
   active,
@@ -85,20 +96,29 @@ function NavIcon({
   );
 }
 
-export function AppChrome({ title = "Realtor", eyebrow = "Premium homes", children }: AppChromeProps) {
+export function AppChrome({ title = "Realtor", eyebrow = "Premium homes", showBack = false, children }: AppChromeProps) {
   const pathname = usePathname();
   const params = useLocalSearchParams<{ type?: string }>();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
+  const { messages } = useLocale();
   const listingType = params.type === "rent" ? "rent" : "sale";
+  const tabs = tabKeys.map((tab) => ({ ...tab, label: messages.mobile[tab.key] }));
   const userImage = user?.imageUrl;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.topBar}>
-        <View>
-          <Text style={styles.eyebrow}>{eyebrow}</Text>
-          <Text style={styles.title}>{title}</Text>
+        <View style={styles.titleRow}>
+          {showBack ? (
+            <Pressable accessibilityLabel={messages.mobile.back} accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}>
+              <BackIcon />
+            </Pressable>
+          ) : null}
+          <View style={styles.titleBlock}>
+            <Text style={styles.eyebrow}>{eyebrow}</Text>
+            <Text style={styles.title}>{title}</Text>
+          </View>
         </View>
         <Link href="/profile" asChild>
           <Pressable accessibilityRole="button" accessibilityLabel="Abrir perfil" style={styles.avatar}>
@@ -158,6 +178,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12
   },
+  titleRow: { alignItems: "center", flex: 1, flexDirection: "row", gap: 10, paddingRight: 12 },
+  titleBlock: { flex: 1 },
+  backButton: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderColor: "rgba(17,17,17,0.10)",
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 42,
+    justifyContent: "center",
+    shadowColor: "#111111",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.10,
+    shadowRadius: 16,
+    width: 42
+  },
+  backIconCanvas: { alignItems: "center", height: 22, justifyContent: "center", position: "relative", width: 22 },
+  backIconHead: { borderBottomColor: "#111111", borderBottomWidth: 2, borderLeftColor: "#111111", borderLeftWidth: 2, height: 10, left: 4, position: "absolute", transform: [{ rotate: "45deg" }], width: 10 },
+  backIconStem: { backgroundColor: "#111111", borderRadius: 1, height: 2, left: 6, position: "absolute", width: 14 },
   eyebrow: { color: "#8c6a00", fontSize: 10, fontWeight: "800", letterSpacing: 1.6, textTransform: "uppercase" },
   title: { color: "#111111", fontSize: 22, fontWeight: "800", marginTop: 2 },
   avatar: {

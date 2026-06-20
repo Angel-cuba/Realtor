@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppChrome } from "../components/app-chrome";
 import { ProfileLoadingState } from "../components/loading-states";
+import { useLocale } from "../contexts/locale-context";
 
 const stats = [
   { label: "Guardadas", value: "12" },
@@ -23,11 +24,12 @@ export default function ProfileScreen() {
   const { isLoaded, isSignedIn } = useAuth();
   const { signOut } = useClerk();
   const { user } = useUser();
+  const { locale, messages: m, setLocale } = useLocale();
   const displayName = user?.fullName ?? user?.emailAddresses?.[0]?.emailAddress ?? "Cuenta Realtor";
 
   if (!isLoaded) {
     return (
-      <AppChrome title="Perfil" eyebrow="Cuenta">
+      <AppChrome title={m.mobile.profile} eyebrow="Cuenta">
         <ProfileLoadingState />
       </AppChrome>
     );
@@ -35,14 +37,28 @@ export default function ProfileScreen() {
 
   if (!isSignedIn) {
     return (
-      <AppChrome title="Perfil" eyebrow="Cuenta">
+      <AppChrome title={m.mobile.profile} eyebrow="Cuenta">
         <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>{m.mobile.language}</Text>
+            <View style={styles.preferenceRow}>
+              <Text style={styles.preferenceLabel}>{m.mobile.languageLabel}</Text>
+              <Pressable
+                onPress={() => setLocale(locale === "es" ? "en" : "es")}
+                style={styles.langToggle}
+                accessibilityRole="button"
+                accessibilityLabel={m.mobile.languageLabel}
+              >
+                <Text style={styles.langToggleText}>{locale === "es" ? "ES" : "EN"}</Text>
+              </Pressable>
+            </View>
+          </View>
           <View style={styles.cardDark}>
             <Text style={styles.agentLabel}>Acceso</Text>
             <Text style={styles.agentName}>Explora libremente. Solicita visitas con cuenta.</Text>
             <Text style={styles.agentCopy}>Para comprar, rentar o contactar un asesor desde mobile, inicia sesion primero.</Text>
             <Pressable style={styles.cta} onPress={() => router.push("/sign-in")} accessibilityRole="button">
-              <Text style={styles.ctaText}>Iniciar sesion</Text>
+              <Text style={styles.ctaText}>{m.mobile.signIn}</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -51,7 +67,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <AppChrome title="Perfil" eyebrow="Cuenta">
+    <AppChrome title={m.mobile.profile} eyebrow="Cuenta">
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heroCard}>
           <View style={styles.avatar}>
@@ -86,6 +102,17 @@ export default function ProfileScreen() {
             <Text style={styles.preferenceLabel}>Tipo</Text>
             <Text style={styles.preferenceValue}>House / Villa</Text>
           </View>
+          <View style={[styles.preferenceRow, { borderTopColor: "rgba(17,17,17,0.08)", borderTopWidth: 1, paddingTop: 12 }]}>
+            <Text style={styles.preferenceLabel}>{m.mobile.languageLabel}</Text>
+            <Pressable
+              onPress={() => setLocale(locale === "es" ? "en" : "es")}
+              style={styles.langToggle}
+              accessibilityRole="button"
+              accessibilityLabel={m.mobile.languageLabel}
+            >
+              <Text style={styles.langToggleText}>{locale === "es" ? "ES" : "EN"}</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.cardDark}>
@@ -96,7 +123,7 @@ export default function ProfileScreen() {
             <Text style={styles.ctaText}>Contactar</Text>
           </Pressable>
           <Pressable style={styles.secondaryCta} onPress={() => signOut()} accessibilityRole="button">
-            <Text style={styles.secondaryCtaText}>Cerrar sesion</Text>
+            <Text style={styles.secondaryCtaText}>{m.mobile.signOut}</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -131,5 +158,7 @@ const styles = StyleSheet.create({
   cta: { alignItems: "center", backgroundColor: "#f3bd21", borderRadius: 8, marginTop: 8, padding: 14 },
   ctaText: { color: "#111111", fontWeight: "900" },
   secondaryCta: { alignItems: "center", borderColor: "rgba(255,255,255,0.18)", borderRadius: 8, borderWidth: 1, marginTop: 4, padding: 14 },
-  secondaryCtaText: { color: "#ffffff", fontWeight: "900" }
+  secondaryCtaText: { color: "#ffffff", fontWeight: "900" },
+  langToggle: { alignItems: "center", backgroundColor: "#111111", borderRadius: 6, justifyContent: "center", paddingHorizontal: 12, paddingVertical: 5 },
+  langToggleText: { color: "#f3bd21", fontSize: 11, fontWeight: "900", letterSpacing: 1.4 }
 });
