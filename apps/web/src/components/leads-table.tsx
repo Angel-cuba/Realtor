@@ -19,6 +19,7 @@ type LeadsTableProps = {
   leads: DashboardLead[];
   page: number;
   totalPages: number;
+  pageHrefBuilder?: (page: number) => string;
 };
 
 const statusLabel: Record<LeadStatus, string> = {
@@ -40,7 +41,8 @@ function formatDate(date: string) {
   });
 }
 
-export function LeadsTable({ leads: initialLeads, page, totalPages }: LeadsTableProps) {
+export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuilder }: LeadsTableProps) {
+  const hrefFor = pageHrefBuilder ?? ((p: number) => `?page=${p}`);
   const [leads, setLeads] = useState(initialLeads);
   const [pendingLeadId, setPendingLeadId] = useState<string | null>(null);
   const [failedLeadId, setFailedLeadId] = useState<string | null>(null);
@@ -113,7 +115,14 @@ export function LeadsTable({ leads: initialLeads, page, totalPages }: LeadsTable
 
             return (
               <tr key={lead.id} className="hover:bg-black/[0.02]">
-                <td className="px-6 py-4 font-medium">{lead.name}</td>
+                <td className="px-6 py-4 font-medium">
+                  <Link
+                    href={`/dashboard/leads/${lead.id}`}
+                    className="hover:underline focus-visible:underline focus-visible:outline-none"
+                  >
+                    {lead.name}
+                  </Link>
+                </td>
                 <td className="px-6 py-4 text-black/60">{lead.email}</td>
                 <td className="px-6 py-4">
                   <span className="rounded bg-linen px-2 py-1 text-xs font-medium">{leadIntentLabel(lead.intent)}</span>
@@ -149,7 +158,7 @@ export function LeadsTable({ leads: initialLeads, page, totalPages }: LeadsTable
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-black/10 px-6 py-4 text-sm">
           {page > 1 ? (
-            <Link href={`?page=${page - 1}`} className="font-medium text-gold hover:underline">
+            <Link href={hrefFor(page - 1)} className="font-medium text-gold hover:underline">
               ← Anterior
             </Link>
           ) : (
@@ -159,7 +168,7 @@ export function LeadsTable({ leads: initialLeads, page, totalPages }: LeadsTable
             Página {page} de {totalPages}
           </span>
           {page < totalPages ? (
-            <Link href={`?page=${page + 1}`} className="font-medium text-gold hover:underline">
+            <Link href={hrefFor(page + 1)} className="font-medium text-gold hover:underline">
               Siguiente →
             </Link>
           ) : (

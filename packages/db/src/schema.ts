@@ -95,3 +95,12 @@ export const leads = pgTable("leads", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 });
+
+export const leadNotes = pgTable("lead_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  leadId: uuid("lead_id").notNull().references(() => leads.id, { onDelete: "cascade" }),
+  authorClerkId: text("author_clerk_id").notNull(),
+  authorName: text("author_name").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+});
