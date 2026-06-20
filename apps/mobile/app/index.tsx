@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "expo-router";
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { formatMoney, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
-import { AppChrome } from "./_components/chrome";
+import { AppChrome } from "../components/app-chrome";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
