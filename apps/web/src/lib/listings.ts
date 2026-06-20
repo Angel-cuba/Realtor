@@ -1,5 +1,5 @@
 import type { PropertyListing } from "@realtor/domain";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, eq, inArray } from "drizzle-orm";
 import {
   agents,
   db,
@@ -65,22 +65,38 @@ async function mapListingRows(rows: ListingRow[]) {
   });
 }
 
-export async function getListingsByType(type: "sale" | "rent") {
-  const rows = await db
-    .select({
-      listing: listingsTable,
-      property: properties,
-      agent: agents,
-      profile: userProfiles
-    })
-    .from(listingsTable)
-    .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
-    .leftJoin(agents, eq(listingsTable.agentId, agents.id))
-    .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
-    .where(and(eq(listingsTable.listingType, type), eq(listingsTable.status, "published")))
-    .orderBy(asc(listingsTable.publishedAt), asc(listingsTable.slug));
+export const LISTINGS_PAGE_SIZE = 24;
 
-  return mapListingRows(rows);
+export async function getListingsByType(
+  type: "sale" | "rent",
+  options: { page?: number; pageSize?: number } = {}
+) {
+  const pageSize = options.pageSize ?? LISTINGS_PAGE_SIZE;
+  const page = Math.max(1, options.page ?? 1);
+  const offset = (page - 1) * pageSize;
+
+  const where = and(eq(listingsTable.listingType, type), eq(listingsTable.status, "published"));
+
+  const [[{ total }], rows] = await Promise.all([
+    db.select({ total: count() }).from(listingsTable).where(where),
+    db
+      .select({
+        listing: listingsTable,
+        property: properties,
+        agent: agents,
+        profile: userProfiles
+      })
+      .from(listingsTable)
+      .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
+      .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+      .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
+      .where(where)
+      .orderBy(asc(listingsTable.publishedAt), asc(listingsTable.slug))
+      .limit(pageSize)
+      .offset(offset),
+  ]);
+
+  return { listings: await mapListingRows(rows), total };
 }
 
 export async function getListingBySlug(slug: string) {
@@ -96,6 +112,25 @@ export async function getListingBySlug(slug: string) {
     .leftJoin(agents, eq(listingsTable.agentId, agents.id))
     .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
     .where(eq(listingsTable.slug, slug))
+    .limit(1);
+
+  const [listing] = await mapListingRows(rows);
+  return listing;
+}
+
+export async function getPublishedListingBySlug(slug: string) {
+  const rows = await db
+    .select({
+      listing: listingsTable,
+      property: properties,
+      agent: agents,
+      profile: userProfiles
+    })
+    .from(listingsTable)
+    .innerJoin(properties, eq(listingsTable.propertyId, properties.id))
+    .leftJoin(agents, eq(listingsTable.agentId, agents.id))
+    .leftJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
+    .where(and(eq(listingsTable.slug, slug), eq(listingsTable.status, "published")))
     .limit(1);
 
   const [listing] = await mapListingRows(rows);

@@ -27,6 +27,7 @@ export async function GET(request: Request) {
   const { type, page } = parsed.data;
   const { listings, total } = await getListingsByType(type, { page });
   const totalPages = Math.max(1, Math.ceil(total / LISTINGS_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
 
-  return NextResponse.json({ listings, total, page, totalPages });
+  return NextResponse.json({ listings, total, page: safePage, totalPages });
 }

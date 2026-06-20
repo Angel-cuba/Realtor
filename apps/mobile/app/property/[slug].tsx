@@ -34,6 +34,7 @@ export default function PropertyScreen() {
   }, [slug]);
 
   async function handleSubmit() {
+    if (!listing) return;
     if (!name.trim() || !email.trim() || message.trim().length < 10) {
       Alert.alert("Campos incompletos", "Completa nombre, email y un mensaje de al menos 10 caracteres.");
       return;
@@ -48,7 +49,7 @@ export default function PropertyScreen() {
           name: name.trim(),
           email: email.trim(),
           message: message.trim(),
-          intent: "buy",
+          intent: listing.listingType === "rent" ? "rent" : "buy",
           listingSlug: slug,
         }),
       });
