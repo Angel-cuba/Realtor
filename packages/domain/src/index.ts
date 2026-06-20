@@ -16,6 +16,12 @@ export const leadStatusUpdateSchema = z.object({
   status: z.enum(leadStatuses)
 });
 
+export const leadNoteInputSchema = z.object({
+  body: z.string().min(2).max(2000)
+});
+
+export type LeadNoteInput = z.infer<typeof leadNoteInputSchema>;
+
 export const listingTypes = ["sale", "rent"] as const;
 export const propertyTypes = ["house", "apartment", "villa", "townhouse", "land", "penthouse"] as const;
 export const listingStatuses = [
