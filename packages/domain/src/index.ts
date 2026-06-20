@@ -16,6 +16,21 @@ export const leadStatusUpdateSchema = z.object({
   status: z.enum(leadStatuses)
 });
 
+export const leadStatusLabels: Record<LeadStatus, string> = {
+  new: "Nuevo",
+  contacted: "Contactado",
+  qualified: "Calificado",
+  tour_scheduled: "Tour agendado",
+  offer_intent: "Intencion de oferta",
+  negotiating: "Negociando",
+  won: "Ganado",
+  lost: "Perdido"
+};
+
+export function leadStatusLabel(status: string) {
+  return leadStatusLabels[status as LeadStatus] ?? status;
+}
+
 export const leadNoteInputSchema = z.object({
   body: z.string().min(2).max(2000)
 });

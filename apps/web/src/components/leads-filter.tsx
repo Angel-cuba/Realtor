@@ -3,18 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search, X } from "lucide-react";
-import { leadIntents, leadIntentLabel, leadStatuses } from "@realtor/domain";
-
-const statusLabel: Record<string, string> = {
-  new: "Nuevo",
-  contacted: "Contactado",
-  qualified: "Calificado",
-  tour_scheduled: "Tour agendado",
-  offer_intent: "Intencion de oferta",
-  negotiating: "Negociando",
-  won: "Ganado",
-  lost: "Perdido",
-};
+import { leadIntents, leadIntentLabel, leadStatuses, leadStatusLabel } from "@realtor/domain";
 
 type Props = {
   defaultStatus: string;
@@ -80,7 +69,7 @@ export function LeadsFilter({ defaultStatus, defaultIntent, defaultQ }: Props) {
         >
           <option value="">Todos</option>
           {leadStatuses.map((s) => (
-            <option key={s} value={s}>{statusLabel[s]}</option>
+            <option key={s} value={s}>{leadStatusLabel(s)}</option>
           ))}
         </select>
       </label>

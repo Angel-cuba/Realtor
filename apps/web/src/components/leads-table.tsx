@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { leadIntentLabel, leadStatuses, type LeadStatus } from "@realtor/domain";
+import { leadIntentLabel, leadStatusLabel, leadStatuses, type LeadStatus } from "@realtor/domain";
 import { leadStatusClass } from "@/components/lead-status-pill";
 
 type DashboardLead = {
@@ -20,17 +20,6 @@ type LeadsTableProps = {
   page: number;
   totalPages: number;
   pageHrefBuilder?: (page: number) => string;
-};
-
-const statusLabel: Record<LeadStatus, string> = {
-  new: "Nuevo",
-  contacted: "Contactado",
-  qualified: "Calificado",
-  tour_scheduled: "Tour agendado",
-  offer_intent: "Intencion de oferta",
-  negotiating: "Negociando",
-  won: "Ganado",
-  lost: "Perdido"
 };
 
 function formatDate(date: string) {
@@ -139,7 +128,7 @@ export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuil
                       >
                         {leadStatuses.map((status) => (
                           <option key={status} value={status} className="bg-white text-ink">
-                            {statusLabel[status]}
+                            {leadStatusLabel(status)}
                           </option>
                         ))}
                       </select>
