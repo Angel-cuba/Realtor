@@ -25,6 +25,7 @@
     "db:push": "drizzle-kit push --config drizzle.config.ts",
     "db:seed": "tsx packages/db/src/seed.ts",
     "db:seed-extra": "tsx packages/db/src/seed-extra.ts",
+    "db:seed-images": "tsx packages/db/src/seed-images.ts",
     "db:studio": "drizzle-kit studio --config drizzle.config.ts"
   },
   "overrides": {
