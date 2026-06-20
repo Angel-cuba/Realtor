@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Bath, BedDouble, CalendarDays, Heart, MapPin, Share2, Square } from "lucide-react";
+import { Bath, BedDouble, CalendarDays, MapPin, Square } from "lucide-react";
 import { formatMoney, listingTypeLabel, propertyTypeLabel } from "@realtor/domain";
 import { LeadForm } from "@/components/lead-form";
 import { PropertyImage } from "@/components/property-image";
@@ -63,25 +63,15 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 pb-16 sm:px-6 lg:grid-cols-[1fr_380px] lg:px-8">
         <article className="rounded bg-white p-6 md:p-8">
-          <div className="flex flex-col justify-between gap-4 border-b border-black/10 pb-6 md:flex-row md:items-start">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">
-                {listingTypeLabel(listing.listingType)} / {propertyTypeLabel(listing.propertyType)}
-              </p>
-              <h1 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight">{listing.title}</h1>
-              <p className="mt-3 inline-flex items-center gap-2 text-black/55">
-                <MapPin size={17} aria-hidden />
-                {listing.addressSummary}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button className="grid h-11 w-11 place-items-center rounded border border-black/10" type="button">
-                <Heart size={18} aria-label="Guardar" />
-              </button>
-              <button className="grid h-11 w-11 place-items-center rounded border border-black/10" type="button">
-                <Share2 size={18} aria-label="Compartir" />
-              </button>
-            </div>
+          <div className="border-b border-black/10 pb-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">
+              {listingTypeLabel(listing.listingType)} / {propertyTypeLabel(listing.propertyType)}
+            </p>
+            <h1 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight">{listing.title}</h1>
+            <p className="mt-3 inline-flex items-center gap-2 text-black/55">
+              <MapPin size={17} aria-hidden />
+              {listing.addressSummary}
+            </p>
           </div>
 
           <div className="grid gap-4 border-b border-black/10 py-6 sm:grid-cols-4">
@@ -124,12 +114,17 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             <p className="text-sm uppercase tracking-[0.18em] text-gold">Assigned agent</p>
             <h2 className="mt-3 text-2xl font-semibold">{listing.agentName}</h2>
             <p className="mt-1 text-white/60">{listing.agentTitle}</p>
-            <button className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded bg-gold px-5 py-3 font-semibold text-ink" type="button">
+            <a
+              href="#lead-form"
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded bg-gold px-5 py-3 font-semibold text-ink transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+            >
               <CalendarDays size={17} aria-hidden />
               Solicitar visita
-            </button>
+            </a>
           </div>
-          <LeadForm intent={listing.listingType === "rent" ? "rent" : "buy"} listingSlug={listing.slug} />
+          <div id="lead-form">
+            <LeadForm intent={listing.listingType === "rent" ? "rent" : "buy"} listingSlug={listing.slug} />
+          </div>
         </aside>
       </section>
     </main>

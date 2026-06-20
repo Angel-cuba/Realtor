@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bath, BedDouble, Heart, MapPin, Share2, Square } from "lucide-react";
+import { Bath, BedDouble, MapPin, Square } from "lucide-react";
 import { formatMoney, listingTypeLabel, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
 import { PropertyImage } from "@/components/property-image";
 
@@ -22,24 +22,14 @@ export function PropertyCard({ listing }: { listing: PropertyListing }) {
       </Link>
 
       <div className="grid gap-4 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xl font-semibold">
-              {formatMoney(listing.price, listing.currency)}
-              <span className="text-sm text-black/50">{priceSuffix}</span>
-            </p>
-            <Link className="mt-1 line-clamp-2 text-base font-medium" href={`/propiedades/${listing.slug}`}>
-              {listing.title}
-            </Link>
-          </div>
-          <div className="flex gap-2">
-            <button className="grid h-9 w-9 place-items-center rounded border border-black/10" type="button">
-              <Heart size={17} aria-label="Guardar" />
-            </button>
-            <button className="grid h-9 w-9 place-items-center rounded border border-black/10" type="button">
-              <Share2 size={17} aria-label="Compartir" />
-            </button>
-          </div>
+        <div>
+          <p className="text-xl font-semibold">
+            {formatMoney(listing.price, listing.currency)}
+            <span className="text-sm text-black/50">{priceSuffix}</span>
+          </p>
+          <Link className="mt-1 line-clamp-2 text-base font-medium hover:underline focus-visible:underline" href={`/propiedades/${listing.slug}`}>
+            {listing.title}
+          </Link>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-black/55">
