@@ -65,8 +65,10 @@ as the web app. It includes:
 
 - Explore screen with sale/rent switching and local city/neighborhood search
 - Property detail screen backed by `GET /api/listings/[slug]`
-- Lead submission to `POST /api/leads`
+- Session-gated lead submission to `POST /api/leads`
+- Floating bottom tab for Comprar, Vender, Rentar, Guardados, and Perfil
 - Clerk provider setup with Secure Store token persistence
+- Native Clerk sign-in/sign-up screen via `@clerk/expo/native`
 
 ```bash
 # Start the Next.js API/web app first
@@ -90,7 +92,8 @@ Mobile environment values live in `apps/mobile/.env`:
 The mobile workspace uses a custom native entrypoint (`apps/mobile/index.native.js`)
 that initializes React Native globals before Expo Router. Keep this in place so
 Hermes has `FormData`, `URL`, and related globals available before Expo/Clerk
-runtime modules load.
+runtime modules load. The app can be browsed signed out, but requesting a visit
+or contacting an advisor redirects to mobile sign-in first.
 
 ## Environment variables
 
@@ -190,6 +193,27 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S10 — Listings CRUD | ✅ Shipped | Dashboard listings table, status pills, transactional `POST /api/listings`, `PATCH /api/listings/[slug]` for status, new listing form |
 | S11 — Lead detail + notes + filters | ✅ Shipped | `/dashboard/leads/[id]` with notes feed, `POST /api/leads/[id]/notes`, server-side status/intent/q filters preserving pagination |
 | S12 — Hardening | ✅ Shipped | In-memory IP rate limit on `POST /api/leads` (10 req / 10 min), Vercel BotID enablement guide, Supabase RLS policy docs |
+
+## Next roadmap: S13 i18n ES/EN
+
+Goal: add Spanish and English language support without duplicating routes or drifting copy across web and mobile.
+
+Recommended implementation order:
+
+1. Create a shared `packages/i18n` workspace with typed message dictionaries for `es` and `en`.
+2. Move reusable labels first: nav items, listing intent labels, form labels, validation copy, dashboard statuses, and empty/loading states.
+3. Add locale detection and persistence on web via URL or cookie, then expose a compact language switcher in the header.
+4. Add the same dictionary access pattern to mobile, with locale stored locally and a language control under Perfil.
+5. Keep money/date formatting locale-aware through shared helpers, defaulting to Spanish until the user chooses English.
+
+Acceptance gates:
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test --workspace @realtor/web`
+- `npm run build --workspace @realtor/web`
+- `npm run build --workspace @realtor/mobile`
+- Manual smoke: switch ES/EN on home, buy/rent listings, property detail lead form, mobile explore, and mobile profile.
 
 ## Security & hardening
 
