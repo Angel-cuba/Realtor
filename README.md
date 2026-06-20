@@ -86,6 +86,7 @@ npm run db:generate     # regenerate Drizzle migration files after schema change
 npm run db:studio       # open Drizzle Studio (visual DB browser)
 npm run db:seed         # seed 6 fixture listings with agents and media rows
 npm run db:seed-extra   # idempotent: load 30 demo listings across 8 cities
+npm run db:seed-images  # idempotent: assign 3 picsum.photos covers per published listing
 
 # Web tests
 npm run test --workspace @realtor/web       # Vitest, single run
