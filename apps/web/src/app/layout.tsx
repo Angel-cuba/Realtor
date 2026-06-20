@@ -9,15 +9,13 @@ const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
   axes: ["opsz"]
 });
 
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
-  display: "swap",
-  weight: ["400", "500", "600", "700"]
+  display: "swap"
 });
 
 export const metadata: Metadata = {
