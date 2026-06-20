@@ -1,0 +1,68 @@
+import { useAuth } from "@clerk/expo";
+import { router } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppChrome } from "../components/app-chrome";
+import { ProfileLoadingState } from "../components/loading-states";
+
+export default function SavedScreen() {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) {
+    return (
+      <AppChrome title="Guardados" eyebrow="Favoritos">
+        <ProfileLoadingState />
+      </AppChrome>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <AppChrome title="Guardados" eyebrow="Favoritos">
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.darkCard}>
+            <Text style={styles.kicker}>Favoritos</Text>
+            <Text style={styles.title}>Guarda propiedades y vuelve a compararlas cuando quieras.</Text>
+            <Text style={styles.copy}>Explorar es libre. Para guardar, comprar o rentar desde mobile, inicia sesion primero.</Text>
+            <Pressable accessibilityRole="button" onPress={() => router.push("/sign-in")} style={styles.primaryCta}>
+              <Text style={styles.primaryCtaText}>Iniciar sesion</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </AppChrome>
+    );
+  }
+
+  return (
+    <AppChrome title="Guardados" eyebrow="Favoritos">
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.emptyCard}>
+          <View style={styles.savedMark}>
+            <View style={styles.savedShape} />
+          </View>
+          <Text style={styles.emptyTitle}>Todavia no hay guardados.</Text>
+          <Text style={styles.emptyCopy}>Cuando marques una propiedad, aparecera aqui para comparar precio, ciudad y detalles clave.</Text>
+          <Pressable accessibilityRole="button" onPress={() => router.push("/?type=sale")} style={styles.secondaryCta}>
+            <Text style={styles.secondaryCtaText}>Explorar propiedades</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </AppChrome>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { gap: 16, padding: 18, paddingBottom: 28 },
+  darkCard: { backgroundColor: "#111111", borderRadius: 8, gap: 10, padding: 20, shadowColor: "#111111", shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.18, shadowRadius: 26 },
+  kicker: { color: "#f3bd21", fontSize: 11, fontWeight: "900", letterSpacing: 1.6, textTransform: "uppercase" },
+  title: { color: "#ffffff", fontSize: 30, fontWeight: "900", lineHeight: 34 },
+  copy: { color: "rgba(255,255,255,0.68)", fontSize: 15, lineHeight: 22 },
+  primaryCta: { alignItems: "center", backgroundColor: "#f3bd21", borderRadius: 8, marginTop: 8, padding: 14 },
+  primaryCtaText: { color: "#111111", fontWeight: "900" },
+  emptyCard: { alignItems: "center", backgroundColor: "#ffffff", borderRadius: 8, gap: 10, padding: 22, shadowColor: "#111111", shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.10, shadowRadius: 24 },
+  savedMark: { alignItems: "center", backgroundColor: "#f3bd21", borderRadius: 8, height: 54, justifyContent: "center", width: 54 },
+  savedShape: { borderBottomColor: "transparent", borderBottomWidth: 11, borderLeftColor: "#111111", borderLeftWidth: 9, borderRightColor: "#111111", borderRightWidth: 9, borderTopColor: "#111111", borderTopWidth: 25, height: 0, width: 22 },
+  emptyTitle: { color: "#111111", fontSize: 24, fontWeight: "900", textAlign: "center" },
+  emptyCopy: { color: "#666666", lineHeight: 21, textAlign: "center" },
+  secondaryCta: { alignItems: "center", backgroundColor: "#111111", borderRadius: 8, marginTop: 8, padding: 14, width: "100%" },
+  secondaryCtaText: { color: "#ffffff", fontWeight: "900" }
+});

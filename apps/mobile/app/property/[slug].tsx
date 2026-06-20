@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { useAuth } from "@clerk/expo";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { formatMoney, propertyTypeLabel, type PropertyListing } from "@realtor/domain";
 import { AppChrome } from "../../components/app-chrome";
+import { PropertyLoadingState } from "../../components/loading-states";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -12,6 +14,7 @@ function imageUri(src: string) {
 
 export default function PropertyScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { isLoaded, isSignedIn } = useAuth();
   const [listing, setListing] = useState<PropertyListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -29,6 +32,11 @@ export default function PropertyScreen() {
 
   async function handleSubmit() {
     if (!listing) return;
+    if (!isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+
     if (!name.trim() || !email.trim() || message.trim().length < 10) {
       Alert.alert("Campos incompletos", "Completa nombre, email y un mensaje de al menos 10 caracteres.");
       return;
@@ -66,7 +74,7 @@ export default function PropertyScreen() {
   if (loading) {
     return (
       <AppChrome title="Propiedad" eyebrow="Cargando detalle">
-        <ActivityIndicator style={styles.loader} color="#8c6a00" />
+        <PropertyLoadingState />
       </AppChrome>
     );
   }
@@ -119,15 +127,26 @@ export default function PropertyScreen() {
           <Text style={styles.agentTitle}>{listing.agentTitle}</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Solicitar visita</Text>
-          <TextInput placeholder="Nombre" placeholderTextColor="#777" value={name} onChangeText={setName} style={styles.input} />
-          <TextInput placeholder="Email" placeholderTextColor="#777" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" style={styles.input} />
-          <TextInput placeholder="Mensaje" placeholderTextColor="#777" value={message} onChangeText={setMessage} multiline style={[styles.input, styles.message]} />
-          <Pressable style={[styles.cta, submitting && styles.ctaDisabled]} onPress={handleSubmit} disabled={submitting}>
-            <Text style={styles.ctaText}>{submitting ? "Enviando..." : "Enviar solicitud"}</Text>
-          </Pressable>
-        </View>
+        {isLoaded && isSignedIn ? (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Solicitar visita</Text>
+            <TextInput placeholder="Nombre" placeholderTextColor="#777" value={name} onChangeText={setName} style={styles.input} />
+            <TextInput placeholder="Email" placeholderTextColor="#777" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" style={styles.input} />
+            <TextInput placeholder="Mensaje" placeholderTextColor="#777" value={message} onChangeText={setMessage} multiline style={[styles.input, styles.message]} />
+            <Pressable style={[styles.cta, submitting && styles.ctaDisabled]} onPress={handleSubmit} disabled={submitting} accessibilityRole="button">
+              <Text style={styles.ctaText}>{submitting ? "Enviando..." : "Enviar solicitud"}</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.cardDark}>
+            <Text style={styles.agentEyebrow}>Acceso requerido</Text>
+            <Text style={styles.agentName}>Inicia sesion para solicitar visita.</Text>
+            <Text style={styles.agentTitle}>Puedes explorar propiedades sin cuenta. Para comprar, rentar o contactar al asesor, primero entra a tu cuenta.</Text>
+            <Pressable style={styles.authCta} onPress={() => router.push("/sign-in")} accessibilityRole="button">
+              <Text style={styles.authCtaText}>Iniciar sesion</Text>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
     </AppChrome>
   );
@@ -135,7 +154,6 @@ export default function PropertyScreen() {
 
 const styles = StyleSheet.create({
   content: { gap: 16, padding: 18, paddingBottom: 28 },
-  loader: { marginTop: 80 },
   notFound: { color: "#777777", marginTop: 80, textAlign: "center" },
   hero: { backgroundColor: "#111111", borderRadius: 8, height: 280, justifyContent: "flex-end", overflow: "hidden", shadowColor: "#111111", shadowOffset: { width: 0, height: 14 }, shadowOpacity: 0.16, shadowRadius: 26 },
   heroImage: { ...StyleSheet.absoluteFill },
@@ -160,5 +178,7 @@ const styles = StyleSheet.create({
   message: { minHeight: 96, textAlignVertical: "top" },
   cta: { alignItems: "center", backgroundColor: "#111111", borderRadius: 8, padding: 15 },
   ctaDisabled: { opacity: 0.5 },
-  ctaText: { color: "#ffffff", fontWeight: "900" }
+  ctaText: { color: "#ffffff", fontWeight: "900" },
+  authCta: { alignItems: "center", backgroundColor: "#f3bd21", borderRadius: 8, marginTop: 10, padding: 15 },
+  authCtaText: { color: "#111111", fontWeight: "900" }
 });

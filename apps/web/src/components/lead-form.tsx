@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { SignInButton, useAuth } from "@clerk/nextjs";
 import { CheckCircle2, Send } from "lucide-react";
 
 type LeadFormProps = {
@@ -12,8 +13,11 @@ type LeadFormProps = {
 
 export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const { isLoaded, isSignedIn } = useAuth();
 
   async function submit(formData: FormData) {
+    if (!isSignedIn) return;
+
     setStatus("sending");
 
     const response = await fetch("/api/leads", {
@@ -33,6 +37,45 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
   }
 
   const wrapperClasses = `rounded bg-white p-6 ${compact ? "" : "shadow-soft"}`;
+  const title = intent === "sell" || intent === "lease_out" ? "Habla con un asesor" : "Solicitar visita";
+  const copy = intent === "sell" || intent === "lease_out"
+    ? "Inicia sesion para coordinar la publicacion con un asesor."
+    : "Inicia sesion para solicitar disponibilidad, precio y proximos pasos.";
+
+  if (!isLoaded) {
+    return (
+      <div className={`${wrapperClasses} grid gap-4`} aria-busy="true" aria-label="Cargando formulario">
+        <div className="h-5 w-44 animate-pulse rounded bg-black/10" />
+        <div className="h-4 w-64 max-w-full animate-pulse rounded bg-black/10" />
+        {[0, 1, 2, 3].map((item) => (
+          <div className="h-12 animate-pulse rounded bg-black/[0.06]" key={item} />
+        ))}
+        <div className="h-12 animate-pulse rounded bg-ink/15" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <div className={`${wrapperClasses} grid gap-4`}>
+        <div className="grid h-12 w-12 place-items-center rounded-full bg-gold/15 text-ink">
+          <Send size={20} aria-hidden />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-black/60">{copy}</p>
+        </div>
+        <SignInButton mode="modal">
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+            type="button"
+          >
+            Iniciar sesion
+          </button>
+        </SignInButton>
+      </div>
+    );
+  }
 
   if (status === "sent") {
     const nextHref = intent === "rent" ? "/rentar" : "/comprar";
@@ -62,7 +105,7 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
   return (
     <form action={submit} className={`${wrapperClasses} grid gap-3`}>
       <div>
-        <h3 className="text-xl font-semibold">Habla con un asesor</h3>
+        <h3 className="text-xl font-semibold">{title}</h3>
         <p className="mt-1 text-sm text-black/55">Te contactamos con disponibilidad, precio y proximos pasos.</p>
       </div>
       <input
@@ -96,6 +139,7 @@ export function LeadForm({ intent, listingSlug, compact = false }: LeadFormProps
       <button
         className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:opacity-60"
         disabled={status === "sending"}
+        aria-busy={status === "sending"}
         type="submit"
       >
         <Send size={17} aria-hidden />
