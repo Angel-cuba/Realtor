@@ -24,6 +24,7 @@
     "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
     "db:push": "drizzle-kit push --config drizzle.config.ts",
     "db:seed": "tsx packages/db/src/seed.ts",
+    "db:seed-extra": "psql \"$DATABASE_URL\" -f packages/db/sql/seed-extra-listings.sql",
     "db:studio": "drizzle-kit studio --config drizzle.config.ts"
   },
   "overrides": {
