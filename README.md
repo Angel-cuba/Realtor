@@ -72,6 +72,10 @@ All variables live in `apps/web/.env.local`. Never commit this file.
 | `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL` | Set to `/dashboard` |
 | `DATABASE_URL` | Supabase transaction pooler, **port 6543** |
 | `UPLOADTHING_TOKEN` | UploadThing project token |
+| `RESEND_API_KEY` | Optional — Resend API key for new-lead email notifications |
+| `LEADS_NOTIFY_EMAIL` | Optional — recipient address for new-lead notifications |
+| `LEADS_NOTIFY_FROM` | Optional — sender (defaults to `onboarding@resend.dev`) |
+| `NEXT_PUBLIC_SITE_URL` | Optional — used in email links (defaults to localhost) |
 
 > `DATABASE_URL` must point to the **transaction pooler** (port 6543), not the direct connection (port 5432). Direct connections time out from local machines.
 
@@ -123,6 +127,7 @@ Schema tables (in FK order): `user_profiles → agents → properties → listin
 | S7c — Expo API layer | ✅ Shipped | `GET /api/listings` + `GET /api/listings/[slug]` for mobile client |
 | S7d — Expo wiring | ✅ Shipped | `ClerkProvider`, real data fetch, lead form submit, status-filtered detail |
 | S8 — MVP polish | ✅ Shipped | Fraunces+Geist pairing, real hero images, mobile menu drawer, colored status pills, inline lead success state, es-ES money, a11y focus rings |
+| S9 — Email notifications | ✅ Shipped | Resend integration on `POST /api/leads`, env-gated (skips silently if unconfigured), Vitest coverage for the dispatch path |
 
 ## Deployment
 

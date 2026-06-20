@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { leadInputSchema } from "@realtor/domain";
 import { db, leads } from "@realtor/db";
+import { sendNewLeadEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   const payload = await request.json();
@@ -13,14 +14,26 @@ export async function POST(request: Request) {
   const { listingSlug, ...data } = parsed.data;
   const score = listingSlug ? 55 : 35;
 
+  let lead;
   try {
-    const [lead] = await db
+    [lead] = await db
       .insert(leads)
       .values({ ...data, score })
       .returning();
-    return NextResponse.json({ lead }, { status: 201 });
   } catch (err) {
     console.error("[api/leads] DB insert failed:", err);
     return NextResponse.json({ error: "DB error" }, { status: 500 });
   }
+
+  await sendNewLeadEmail({
+    leadId: lead.id,
+    name: lead.name,
+    email: lead.email,
+    phone: lead.phone,
+    intent: lead.intent,
+    message: lead.message,
+    listingSlug: listingSlug ?? null,
+  });
+
+  return NextResponse.json({ lead }, { status: 201 });
 }
