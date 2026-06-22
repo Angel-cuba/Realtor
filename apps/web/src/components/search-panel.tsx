@@ -13,28 +13,27 @@ type Props = {
 export function SearchPanel({ intent, defaultQ = "", defaultBudget = "" }: Props) {
   const router = useRouter();
   const { messages: m } = useLocale();
+  const defaultOperation = intent === "rent" ? "rent" : "buy";
+  const formKey = `${defaultOperation}:${defaultQ}:${defaultBudget}`;
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    const q = ((data.get("q") as string) ?? "").trim();
-    const operacion = data.get("operacion") as string;
-    const budget = data.get("budget") as string;
+    const query = ((data.get("q") as string) ?? "").trim();
+    const operation = data.get("operacion") === "rent" ? "rent" : "buy";
+    const budget = (data.get("budget") as string) ?? "";
 
     const params = new URLSearchParams();
-    if (q) params.set("q", q);
+    if (query) params.set("q", query);
     if (budget) params.set("budget", budget);
 
-    const base =
-      intent === "rent" ? "/rentar" :
-      intent === "buy" ? "/comprar" :
-      operacion === "rent" ? "/rentar" : "/comprar";
+    const base = operation === "rent" ? "/rentar" : "/comprar";
 
     router.push(`${base}${params.size ? `?${params}` : ""}`);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-3 rounded bg-white p-3 shadow-soft md:grid-cols-[1.1fr_0.9fr_0.8fr_auto]">
+    <form key={formKey} onSubmit={handleSubmit} className="grid gap-3 rounded bg-white p-3 shadow-soft md:grid-cols-[1.1fr_0.9fr_0.8fr_auto]">
       <label className="flex items-center gap-3 rounded border border-black/10 px-4 py-3">
         <MapPin className="text-gold" size={20} aria-hidden />
         <span className="grid flex-1 gap-1">
@@ -51,7 +50,7 @@ export function SearchPanel({ intent, defaultQ = "", defaultBudget = "" }: Props
         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">{m.search.operationLabel}</span>
         <select
           name="operacion"
-          defaultValue={intent === "rent" ? "rent" : "buy"}
+          defaultValue={defaultOperation}
           className="bg-transparent text-sm outline-none"
         >
           <option value="buy">{m.search.operationBuy}</option>
