@@ -3,7 +3,8 @@ import { and, eq } from "drizzle-orm";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { z } from "zod";
-import { agents, db, listings, propertyMedia, userProfiles } from "@realtor/db";
+import { db, listings, propertyMedia } from "@realtor/db";
+import { getUserContext, isListingOwner } from "@/lib/auth";
 
 const f = createUploadthing();
 
@@ -14,15 +15,21 @@ export const ourFileRouter = {
       const user = await currentUser();
       if (!user) throw new UploadThingError({ code: "FORBIDDEN", message: "Unauthorized" });
 
-      const [listing] = await db
-        .select({ id: listings.id })
-        .from(listings)
-        .innerJoin(agents, eq(listings.agentId, agents.id))
-        .innerJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
-        .where(and(eq(listings.id, input.listingId), eq(userProfiles.clerkUserId, user.id)))
-        .limit(1);
+      const [ctx, listing] = await Promise.all([
+        getUserContext(user.id),
+        db
+          .select({ id: listings.id, agentId: listings.agentId })
+          .from(listings)
+          .where(eq(listings.id, input.listingId))
+          .limit(1)
+          .then((rows) => rows[0] ?? null),
+      ]);
 
-      if (!listing) throw new UploadThingError({ code: "FORBIDDEN", message: "Listing not found or access denied" });
+      if (!ctx) throw new UploadThingError({ code: "FORBIDDEN", message: "No profile found" });
+      if (!listing) throw new UploadThingError({ code: "NOT_FOUND", message: "Listing not found" });
+      if (!isListingOwner(ctx, listing.agentId)) {
+        throw new UploadThingError({ code: "FORBIDDEN", message: "Not your listing" });
+      }
 
       return { userId: user.id, listingId: input.listingId };
     })
