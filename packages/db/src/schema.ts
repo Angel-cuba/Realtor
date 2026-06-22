@@ -10,13 +10,14 @@ import {
   uniqueIndex,
   uuid
 } from "drizzle-orm/pg-core";
-import { leadIntents, leadStatuses, listingStatuses, listingTypes, propertyTypes } from "@realtor/domain";
+import { leadIntents, leadStatuses, listingStatuses, listingTypes, propertyTypes, userRoles } from "@realtor/domain";
 
 export const listingTypeEnum = pgEnum("listing_type", listingTypes);
 export const propertyTypeEnum = pgEnum("property_type", propertyTypes);
 export const listingStatusEnum = pgEnum("listing_status", listingStatuses);
 export const leadStatusEnum = pgEnum("lead_status", leadStatuses);
 export const leadIntentEnum = pgEnum("lead_intent", leadIntents);
+export const userRoleEnum = pgEnum("user_role", userRoles);
 
 export const userProfiles = pgTable("user_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -24,6 +25,7 @@ export const userProfiles = pgTable("user_profiles", {
   displayName: text("display_name").notNull(),
   email: text("email").notNull(),
   phone: text("phone"),
+  role: userRoleEnum("role").notNull().default("buyer"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow()
 });

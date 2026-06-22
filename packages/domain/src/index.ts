@@ -176,3 +176,72 @@ export function propertyTypeLabel(type: PropertyType) {
 
   return labels[type];
 }
+
+// ─── Permission model ─────────────────────────────────────────────────────────
+//
+// Role hierarchy:
+//   buyer    – Browse, save, and contact. No write access to listings.
+//   owner    – Property owner listing their own asset. Manages own listings & media.
+//   agent    – Licensed professional. Manages own listings and assigned leads.
+//   manager  – Team lead. Full listing/lead access regardless of ownership.
+//   admin    – System administrator. Full access including user role management.
+//
+// Ownership scope: owner/agent can only mutate listings where agentId matches
+// their own agent record. manager/admin bypass the ownership check.
+
+export const ROLE_PERMISSIONS = {
+  "listing:create":      ["owner", "agent", "manager", "admin"],
+  "listing:edit:own":    ["owner", "agent", "manager", "admin"],
+  "listing:edit:any":    ["manager", "admin"],
+  "listing:publish":     ["manager", "admin"],
+  "listing:archive":     ["manager", "admin"],
+  "media:upload:own":    ["owner", "agent", "manager", "admin"],
+  "media:delete:own":    ["owner", "agent", "manager", "admin"],
+  "media:manage:any":    ["manager", "admin"],
+  "lead:view:own":       ["agent", "manager", "admin"],
+  "lead:view:all":       ["manager", "admin"],
+  "lead:update:status":  ["agent", "manager", "admin"],
+  "lead:add:notes":      ["agent", "manager", "admin"],
+  "saved:manage":        ["buyer", "owner", "agent", "manager", "admin"],
+  "users:manage:roles":  ["admin"],
+} as const satisfies Record<string, readonly UserRole[]>;
+
+export type Permission = keyof typeof ROLE_PERMISSIONS;
+
+export function hasPermission(role: UserRole, permission: Permission): boolean {
+  return (ROLE_PERMISSIONS[permission] as readonly string[]).includes(role);
+}
+
+// ─── Listing status transition rules ─────────────────────────────────────────
+//
+// Callers must additionally validate:
+//   "sold"   → only valid when listingType === "sale"
+//   "rented" → only valid when listingType === "rent"
+
+export const STATUS_TRANSITIONS: Record<
+  ListingStatus,
+  { roles: readonly UserRole[]; to: readonly ListingStatus[] }
+> = {
+  draft:           { roles: ["owner", "agent", "manager", "admin"], to: ["pending_review"] },
+  pending_review:  { roles: ["manager", "admin"],                   to: ["published", "draft"] },
+  published:       { roles: ["agent", "manager", "admin"],          to: ["reserved", "archived"] },
+  reserved:        { roles: ["agent", "manager", "admin"],          to: ["under_contract", "rented", "published"] },
+  under_contract:  { roles: ["agent", "manager", "admin"],          to: ["sold", "published"] },
+  sold:            { roles: ["manager", "admin"],                   to: ["archived"] },
+  rented:          { roles: ["manager", "admin"],                   to: ["published", "archived"] },
+  archived:        { roles: ["admin"],                              to: ["draft"] },
+};
+
+export function canTransitionStatus(
+  role: UserRole,
+  from: ListingStatus,
+  to: ListingStatus,
+  listingType?: ListingType
+): boolean {
+  const t = STATUS_TRANSITIONS[from];
+  if (!(t.roles as readonly string[]).includes(role)) return false;
+  if (!(t.to as readonly string[]).includes(to)) return false;
+  if (to === "sold" && listingType !== "sale") return false;
+  if (to === "rented" && listingType !== "rent") return false;
+  return true;
+}
