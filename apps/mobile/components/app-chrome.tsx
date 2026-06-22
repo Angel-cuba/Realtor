@@ -1,7 +1,7 @@
 import { useAuth, useUser } from "@clerk/expo";
 import { Link, router, useLocalSearchParams, usePathname } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../contexts/locale-context";
 
 const tabKeys = [
@@ -97,6 +97,7 @@ function NavIcon({
 }
 
 export function AppChrome({ title = "Realtor", eyebrow = "Premium homes", showBack = false, children }: AppChromeProps) {
+  const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const params = useLocalSearchParams<{ type?: string }>();
   const { isSignedIn } = useAuth();
@@ -105,10 +106,12 @@ export function AppChrome({ title = "Realtor", eyebrow = "Premium homes", showBa
   const listingType = params.type === "rent" ? "rent" : "sale";
   const tabs = tabKeys.map((tab) => ({ ...tab, label: messages.mobile[tab.key] }));
   const userImage = user?.imageUrl;
+  const bottomOffset = Math.max(insets.bottom + 4, 12);
+  const bodyBottomSpace = Math.max(insets.bottom + 92, 108);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
+    <View style={styles.safeArea}>
+      <View style={[styles.topBar, { paddingTop: Math.max(insets.top + 8, 18) }]}>
         <View style={styles.titleRow}>
           {showBack ? (
             <Pressable accessibilityLabel={messages.mobile.back} accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}>
@@ -135,34 +138,35 @@ export function AppChrome({ title = "Realtor", eyebrow = "Premium homes", showBa
           </Pressable>
         </Link>
       </View>
-      <View style={styles.body}>{children}</View>
-      <View style={styles.bottomWrap} pointerEvents="box-none">
+      <View style={[styles.body, { paddingBottom: bodyBottomSpace }]}>{children}</View>
+      <View style={[styles.bottomWrap, { bottom: bottomOffset }]} pointerEvents="box-none">
         <View style={styles.bottomBar}>
-        {tabs.map((tab) => {
-          const raised = "raised" in tab && tab.raised;
-          const active =
-            (tab.key === "buy" && pathname === "/" && listingType === "sale") ||
-            (tab.key === "rent" && pathname === "/" && listingType === "rent") ||
-            (tab.key !== "buy" && tab.key !== "rent" && pathname.startsWith("/" + tab.key));
-          const iconName = tab.key === "profile" && isSignedIn ? "user" : tab.icon;
-          return (
-            <Link href={tab.href} asChild key={tab.key}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                style={StyleSheet.flatten([styles.tab, active && styles.tabActive, raised && styles.tabRaised])}
-              >
-                <View style={[styles.tabIcon, active && styles.tabIconActive, raised && styles.tabIconRaised]}>
-                  <NavIcon active={active} name={iconName} raised={raised} />
-                </View>
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive, raised && styles.tabLabelRaised]}>{tab.label}</Text>
-              </Pressable>
-            </Link>
-          );
-        })}
+          <View style={styles.bottomGlassHighlight} pointerEvents="none" />
+          {tabs.map((tab) => {
+            const raised = "raised" in tab && tab.raised;
+            const active =
+              (tab.key === "buy" && pathname === "/" && listingType === "sale") ||
+              (tab.key === "rent" && pathname === "/" && listingType === "rent") ||
+              (tab.key !== "buy" && tab.key !== "rent" && pathname.startsWith("/" + tab.key));
+            const iconName = tab.key === "profile" && isSignedIn ? "user" : tab.icon;
+            return (
+              <Link href={tab.href} asChild key={tab.key}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={StyleSheet.flatten([styles.tab, active && styles.tabActive, raised && styles.tabRaised])}
+                >
+                  <View style={[styles.tabIcon, active && styles.tabIconActive, raised && styles.tabIconRaised]}>
+                    <NavIcon active={active} name={iconName} raised={raised} />
+                  </View>
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive, raised && styles.tabLabelRaised]}>{tab.label}</Text>
+                </Pressable>
+              </Link>
+            );
+          })}
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -176,7 +180,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 18,
-    paddingVertical: 12
+    paddingBottom: 10
   },
   titleRow: { alignItems: "center", flex: 1, flexDirection: "row", gap: 10, paddingRight: 12 },
   titleBlock: { flex: 1 },
@@ -212,56 +216,65 @@ const styles = StyleSheet.create({
     width: 42
   },
   avatarImage: { borderRadius: 8, height: 42, width: 42 },
-  body: { flex: 1, paddingBottom: 126 },
+  body: { flex: 1 },
   bottomWrap: {
-    bottom: 14,
-    left: 16,
+    left: 24,
     position: "absolute",
-    right: 16
+    right: 24
   },
   bottomBar: {
     alignItems: "center",
-    backgroundColor: "rgba(17,17,17,0.94)",
-    borderColor: "rgba(255,255,255,0.10)",
-    borderRadius: 26,
+    backgroundColor: "rgba(18,18,17,0.82)",
+    borderColor: "rgba(255,255,255,0.20)",
+    borderRadius: 22,
     borderWidth: 1,
     flexDirection: "row",
     gap: 2,
-    paddingHorizontal: 8,
-    paddingVertical: 7,
+    overflow: "visible",
+    paddingHorizontal: 7,
+    paddingVertical: 6,
     shadowColor: "#111111",
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.26,
-    shadowRadius: 24
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 22
   },
-  tab: { alignItems: "center", borderRadius: 18, flex: 1, gap: 3, justifyContent: "center", minHeight: 54, paddingHorizontal: 1, paddingVertical: 5 },
+  bottomGlassHighlight: {
+    backgroundColor: "rgba(255,255,255,0.16)",
+    borderRadius: 12,
+    height: 1,
+    left: 18,
+    position: "absolute",
+    right: 18,
+    top: 7
+  },
+  tab: { alignItems: "center", borderRadius: 16, flex: 1, gap: 2, justifyContent: "center", minHeight: 48, paddingHorizontal: 1, paddingVertical: 4 },
   tabActive: {},
   tabRaised: {
     backgroundColor: "transparent",
-    marginTop: -32,
-    minHeight: 82,
+    marginTop: -22,
+    minHeight: 70,
     shadowColor: "#f3bd21",
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.40,
-    shadowRadius: 22
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.34,
+    shadowRadius: 18
   },
-  tabIcon: { alignItems: "center", backgroundColor: "transparent", borderRadius: 15, height: 28, justifyContent: "center", width: 28 },
-  tabIconActive: { backgroundColor: "rgba(243,189,33,0.14)" },
+  tabIcon: { alignItems: "center", backgroundColor: "transparent", borderRadius: 14, height: 26, justifyContent: "center", width: 26 },
+  tabIconActive: { backgroundColor: "rgba(243,189,33,0.16)" },
   tabIconRaised: {
     backgroundColor: "#f3bd21",
     borderColor: "rgba(255,255,255,0.72)",
-    borderRadius: 27,
+    borderRadius: 24,
     borderWidth: 2,
-    height: 54,
+    height: 48,
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.32,
-    shadowRadius: 16,
-    width: 54
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.30,
+    shadowRadius: 14,
+    width: 48
   },
-  tabLabel: { color: "rgba(255,255,255,0.54)", fontSize: 9, fontWeight: "900" },
+  tabLabel: { color: "rgba(255,255,255,0.58)", fontSize: 8.5, fontWeight: "900" },
   tabLabelActive: { color: "#f3bd21" },
-  tabLabelRaised: { color: "#ffffff", fontSize: 10, marginTop: 2, textShadowColor: "rgba(0,0,0,0.38)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  tabLabelRaised: { color: "#ffffff", fontSize: 9.5, marginTop: 1, textShadowColor: "rgba(0,0,0,0.38)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
   iconCanvas: { alignItems: "center", height: 22, justifyContent: "center", position: "relative", width: 22 },
   houseRoof: { borderLeftWidth: 2, borderTopWidth: 2, height: 13, position: "absolute", top: 4, transform: [{ rotate: "45deg" }], width: 13 },
   houseBody: { alignItems: "center", borderBottomWidth: 2, borderLeftWidth: 2, borderRightWidth: 2, bottom: 3, height: 12, justifyContent: "flex-end", position: "absolute", width: 16 },
