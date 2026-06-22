@@ -190,6 +190,13 @@ export type Messages = {
     buy: string;
     sell: string;
     rent: string;
+    splashKicker: string;
+    splashTitle: string;
+    splashSubtitle: string;
+    splashAction: string;
+    splashBuy: string;
+    splashSell: string;
+    splashRent: string;
     saved: string;
     profile: string;
     explore: string;

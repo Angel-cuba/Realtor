@@ -1,6 +1,8 @@
 import { ClerkProvider } from "@clerk/expo";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SplashGate } from "../components/app-splash";
 import { LocaleProvider } from "../contexts/locale-context";
 import { tokenCache } from "../lib/token-cache";
 
@@ -10,10 +12,14 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <LocaleProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-        <StatusBar style="dark" />
-      </LocaleProvider>
+      <SafeAreaProvider>
+        <LocaleProvider>
+          <SplashGate>
+            <Stack screenOptions={{ headerShown: false }} />
+            <StatusBar style="dark" />
+          </SplashGate>
+        </LocaleProvider>
+      </SafeAreaProvider>
     </ClerkProvider>
   );
 }

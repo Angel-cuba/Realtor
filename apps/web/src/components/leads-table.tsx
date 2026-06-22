@@ -21,7 +21,7 @@ type LeadsTableProps = {
   leads: DashboardLead[];
   page: number;
   totalPages: number;
-  pageHrefBuilder?: (page: number) => string;
+  pageBasePath?: string;
 };
 
 function formatDate(date: string, locale: string) {
@@ -32,8 +32,13 @@ function formatDate(date: string, locale: string) {
   });
 }
 
-export function LeadsTable({ leads: initialLeads, page, totalPages, pageHrefBuilder }: LeadsTableProps) {
-  const hrefFor = pageHrefBuilder ?? ((p: number) => `?page=${p}`);
+export function LeadsTable({ leads: initialLeads, page, totalPages, pageBasePath }: LeadsTableProps) {
+  const hrefFor = (p: number) => {
+    if (!pageBasePath) return `?page=${p}`;
+    if (p <= 1) return pageBasePath;
+    const sep = pageBasePath.includes("?") ? "&" : "?";
+    return `${pageBasePath}${sep}page=${p}`;
+  };
   const { locale, messages: m } = useLocale();
   const [leads, setLeads] = useState(initialLeads);
   const [pendingLeadId, setPendingLeadId] = useState<string | null>(null);

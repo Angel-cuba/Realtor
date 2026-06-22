@@ -15,13 +15,19 @@ function pickEnum<T extends readonly string[]>(allowed: T, value: string | undef
   return "";
 }
 
-function buildPageHref(page: number, filters: { status: string; intent: string; q: string }) {
+function buildPageBase(filters: { status: string; intent: string; q: string }) {
   const sp = new URLSearchParams();
   if (filters.status) sp.set("status", filters.status);
   if (filters.intent) sp.set("intent", filters.intent);
   if (filters.q) sp.set("q", filters.q);
-  if (page > 1) sp.set("page", String(page));
   return sp.size ? `/dashboard?${sp.toString()}` : "/dashboard";
+}
+
+function buildPageHref(page: number, filters: { status: string; intent: string; q: string }) {
+  const base = buildPageBase(filters);
+  if (page <= 1) return base;
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}page=${page}`;
 }
 
 export default async function DashboardPage({
@@ -145,7 +151,7 @@ export default async function DashboardPage({
             leads={leadRows}
             page={page}
             totalPages={totalPages}
-            pageHrefBuilder={(p) => buildPageHref(p, filterArgs)}
+            pageBasePath={buildPageBase(filterArgs)}
           />
         </div>
       </div>
