@@ -1,22 +1,39 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { ArrowLeft, UploadCloud } from "lucide-react";
 import { db, listings, propertyMedia } from "@realtor/db";
 import { ListingPhotoUploader } from "@/components/listing-photo-uploader";
+import { canManageAllListings, canManageAssignedListings, getUserContext } from "@/lib/auth";
 
 export default async function DashboardUploadPage() {
   await auth.protect();
+  const { userId } = await auth();
+  const userContext = userId ? await getUserContext(userId) : null;
+  const scopedAgentId = userContext && canManageAssignedListings(userContext) ? userContext.agentId : null;
+  const listingWhere = userContext && canManageAllListings(userContext)
+    ? eq(listings.status, "published")
+    : scopedAgentId
+      ? and(eq(listings.status, "published"), eq(listings.agentId, scopedAgentId))
+      : null;
 
-  const publishedListings = await db
-    .select({
-      id: listings.id,
-      slug: listings.slug,
-      title: listings.title
-    })
-    .from(listings)
-    .where(eq(listings.status, "published"))
-    .orderBy(asc(listings.publishedAt), asc(listings.title));
+  const publishedListings = listingWhere
+    ? await db
+        .select({
+          id: listings.id,
+          slug: listings.slug,
+          title: listings.title
+        })
+        .from(listings)
+        .where(listingWhere)
+        .orderBy(asc(listings.publishedAt), asc(listings.title))
+    : [];
+
+  const emptyMessage = !userContext
+    ? "Tu cuenta no tiene un perfil interno asignado. Contacta al administrador."
+    : listingWhere
+      ? undefined
+      : "Tu rol actual no permite administrar fotos de propiedades.";
 
   const listingIds = publishedListings.map((listing) => listing.id);
   const photos =
@@ -63,7 +80,7 @@ export default async function DashboardUploadPage() {
         </div>
 
         <div className="mt-8">
-          <ListingPhotoUploader listings={uploadListings} />
+          <ListingPhotoUploader listings={uploadListings} emptyMessage={emptyMessage} />
         </div>
       </div>
     </main>

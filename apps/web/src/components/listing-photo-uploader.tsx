@@ -21,6 +21,7 @@ type ListingOption = {
 
 type Props = {
   listings: ListingOption[];
+  emptyMessage?: string;
 };
 
 type StatusMessage = {
@@ -28,7 +29,7 @@ type StatusMessage = {
   type: "info" | "success" | "error";
 };
 
-export function ListingPhotoUploader({ listings }: Props) {
+export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
   const router = useRouter();
   const [selectedListingId, setSelectedListingId] = useState(listings[0]?.id ?? "");
   const [message, setMessage] = useState<StatusMessage | null>(null);
@@ -75,7 +76,7 @@ export function ListingPhotoUploader({ listings }: Props) {
   if (listings.length === 0) {
     return (
       <div className="rounded bg-white p-6 text-center text-black/45">
-        No hay propiedades publicadas disponibles para subir fotos.
+        {emptyMessage ?? "No hay propiedades publicadas disponibles para subir fotos."}
       </div>
     );
   }
