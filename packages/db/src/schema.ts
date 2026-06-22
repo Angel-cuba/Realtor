@@ -79,6 +79,7 @@ export const propertyMedia = pgTable("property_media", {
   listingId: uuid("listing_id").notNull().references(() => listings.id),
   url: text("url").notNull(),
   alt: text("alt").notNull(),
+  uploadThingKey: text("upload_thing_key"),
   sortOrder: integer("sort_order").notNull().default(0)
 });
 
