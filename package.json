@@ -27,6 +27,7 @@
     "db:seed": "tsx packages/db/src/seed.ts",
     "db:seed-extra": "tsx packages/db/src/seed-extra.ts",
     "db:seed-images": "tsx packages/db/src/seed-images.ts",
+    "db:audit-images": "tsx packages/db/src/audit-image-urls.ts",
     "db:studio": "drizzle-kit studio --config drizzle.config.ts"
   },
   "overrides": {

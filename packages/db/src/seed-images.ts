@@ -15,7 +15,20 @@ const { and, eq, inArray, isNull, like, or } = await import("drizzle-orm");
 const PHOTOS_PER_LISTING = 3;
 const IMAGE_WIDTH = 1280;
 const IMAGE_HEIGHT = 900;
-const IMAGE_KEYWORDS = "house,home,realestate";
+const HOUSE_PHOTOS = [
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
+  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c",
+  "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3",
+  "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde",
+  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6",
+  "https://images.unsplash.com/photo-1570129477492-45c003edd2be",
+  "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6",
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9",
+  "https://images.unsplash.com/photo-1605146769289-440113cc3d00",
+  "https://images.unsplash.com/photo-1613490493576-7fde63acd811",
+  "https://images.unsplash.com/photo-1598228723793-52759bba239c",
+  "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83"
+];
 
 function deterministicId(seed: string) {
   const h = createHash("md5").update(seed).digest("hex");
@@ -28,8 +41,8 @@ function deterministicLock(seed: string) {
 }
 
 function houseImageUrl(slug: string, idx: number) {
-  const lock = deterministicLock(slug + "-" + idx);
-  return "https://loremflickr.com/" + IMAGE_WIDTH + "/" + IMAGE_HEIGHT + "/" + IMAGE_KEYWORDS + "?lock=" + lock;
+  const photo = HOUSE_PHOTOS[deterministicLock(slug + "-" + idx) % HOUSE_PHOTOS.length];
+  return photo + "?auto=format&fit=crop&w=" + IMAGE_WIDTH + "&h=" + IMAGE_HEIGHT + "&q=80";
 }
 
 const published = await db
@@ -61,6 +74,7 @@ try {
             like(propertyMedia.url, "https://picsum.photos/%"),
             like(propertyMedia.url, "https://fastly.picsum.photos/%"),
             like(propertyMedia.url, "https://loremflickr.com/%"),
+            like(propertyMedia.url, "https://images.unsplash.com/%"),
             like(propertyMedia.url, "/images/realtor/const-%")
           )
         )
