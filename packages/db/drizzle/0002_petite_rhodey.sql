@@ -1,0 +1,1 @@
+ALTER TABLE "property_media" ADD COLUMN "upload_thing_key" text;
