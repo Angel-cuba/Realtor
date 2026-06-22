@@ -46,7 +46,9 @@ export default function PropertyScreen() {
         })
         .catch(() => {});
     });
-  }, [isSignedIn, listing, getToken]);
+  // getToken is stable (Clerk API) — intentionally omitted from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn, listing]);
 
   async function toggleSave() {
     if (!listing) return;
