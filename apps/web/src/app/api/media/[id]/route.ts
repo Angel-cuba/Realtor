@@ -34,27 +34,27 @@ export async function DELETE(
     return NextResponse.json({ error: "Invalid media id" }, { status: 400 });
   }
 
-  const [media] = await db
-    .select({
-      id: propertyMedia.id,
-      url: propertyMedia.url,
-      uploadThingKey: propertyMedia.uploadThingKey,
-      agentId: listings.agentId,
-    })
-    .from(propertyMedia)
-    .innerJoin(listings, eq(propertyMedia.listingId, listings.id))
-    .where(eq(propertyMedia.id, parsedId.data))
-    .limit(1);
+  const [[media], [agentRow]] = await Promise.all([
+    db
+      .select({
+        id: propertyMedia.id,
+        url: propertyMedia.url,
+        uploadThingKey: propertyMedia.uploadThingKey,
+        agentId: listings.agentId,
+      })
+      .from(propertyMedia)
+      .innerJoin(listings, eq(propertyMedia.listingId, listings.id))
+      .where(eq(propertyMedia.id, parsedId.data))
+      .limit(1),
+    db
+      .select({ id: agents.id })
+      .from(agents)
+      .innerJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
+      .where(and(eq(userProfiles.clerkUserId, userId)))
+      .limit(1),
+  ]);
 
   if (!media) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  const [agentRow] = await db
-    .select({ id: agents.id })
-    .from(agents)
-    .innerJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
-    .where(and(eq(userProfiles.clerkUserId, userId)))
-    .limit(1);
-
   if (!agentRow || media.agentId !== agentRow.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
