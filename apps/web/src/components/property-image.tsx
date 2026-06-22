@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { Building2 } from "lucide-react";
 
@@ -11,7 +14,9 @@ type Props = {
 };
 
 export function PropertyImage({ src, alt, label, sizes, priority, className }: Props) {
-  if (!src) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-ink">
         <Building2 className="text-gold/25" size={36} aria-hidden />
@@ -30,6 +35,7 @@ export function PropertyImage({ src, alt, label, sizes, priority, className }: P
       sizes={sizes}
       priority={priority}
       className={className}
+      onError={() => setFailed(true)}
     />
   );
 }
