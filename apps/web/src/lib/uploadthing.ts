@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { z } from "zod";
-import { db, listings, propertyMedia } from "@realtor/db";
+import { agents, db, listings, propertyMedia, userProfiles } from "@realtor/db";
 
 const f = createUploadthing();
 
@@ -17,10 +17,12 @@ export const ourFileRouter = {
       const [listing] = await db
         .select({ id: listings.id })
         .from(listings)
-        .where(eq(listings.id, input.listingId))
+        .innerJoin(agents, eq(listings.agentId, agents.id))
+        .innerJoin(userProfiles, eq(agents.userProfileId, userProfiles.id))
+        .where(and(eq(listings.id, input.listingId), eq(userProfiles.clerkUserId, user.id)))
         .limit(1);
 
-      if (!listing) throw new UploadThingError({ code: "NOT_FOUND", message: "Listing not found" });
+      if (!listing) throw new UploadThingError({ code: "FORBIDDEN", message: "Listing not found or access denied" });
 
       return { userId: user.id, listingId: input.listingId };
     })
@@ -34,7 +36,7 @@ export const ourFileRouter = {
       if (placeholder) {
         await db
           .update(propertyMedia)
-          .set({ url: file.ufsUrl, alt: file.name, sortOrder: 0 })
+          .set({ url: file.ufsUrl, alt: file.name, uploadThingKey: file.key, sortOrder: 0 })
           .where(eq(propertyMedia.id, placeholder.id));
 
         return { url: file.ufsUrl };
@@ -49,6 +51,7 @@ export const ourFileRouter = {
         listingId: metadata.listingId,
         url: file.ufsUrl,
         alt: file.name,
+        uploadThingKey: file.key,
         sortOrder: existing.length
       });
 
