@@ -30,7 +30,9 @@ export default function SavedScreen() {
       const data = await res.json();
       setListings(data.listings ?? []);
     }
-  }, [getToken]);
+  // getToken is stable (Clerk API) — intentionally omitted from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!isSignedIn) return;

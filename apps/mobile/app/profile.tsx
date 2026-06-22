@@ -51,7 +51,9 @@ export default function ProfileScreen() {
       return (data.listings ?? []) as PropertyListing[];
     }
     return [];
-  }, [getToken]);
+  // getToken is stable (Clerk API) — intentionally omitted from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useFocusEffect(useCallback(() => {
     if (!isSignedIn) {
