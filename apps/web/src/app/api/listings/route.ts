@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { db, listings, properties } from "@realtor/db";
-import { listingInputSchema } from "@realtor/domain";
+import { hasPermission, listingInputSchema } from "@realtor/domain";
 import { getListingsByType, LISTINGS_PAGE_SIZE } from "@/lib/listings";
-import { getAgentForClerkUser } from "@/lib/agent";
+import { getUserContext } from "@/lib/auth";
 import { uniqueListingSlug } from "@/lib/slug";
 
 const querySchema = z.object({
@@ -43,8 +43,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const agentProfile = await getAgentForClerkUser(userId);
-  if (!agentProfile) {
+  const ctx = await getUserContext(userId);
+  if (!ctx || !hasPermission(ctx.role, "listing:create")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
         .insert(listings)
         .values({
           propertyId: property.id,
-          agentId: agentProfile.agentId,
+          agentId: ctx.agentId ?? null,
           slug,
           title: data.title,
           listingType: data.listingType,

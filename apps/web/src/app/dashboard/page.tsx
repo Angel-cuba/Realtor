@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Building2, UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
-import { leadIntents, leadStatuses, type LeadIntent, type LeadStatus } from "@realtor/domain";
+import { hasPermission, leadIntents, leadStatuses, type LeadIntent, type LeadStatus } from "@realtor/domain";
 import { LeadsFilter } from "@/components/leads-filter";
 import { LeadsTable } from "@/components/leads-table";
+import { getUserContext } from "@/lib/auth";
 
 const PAGE_SIZE = 10;
 
@@ -35,8 +36,14 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ page?: string; status?: string; intent?: string; q?: string }>;
 }) {
-  await auth.protect();
+  const { userId } = await auth.protect();
   const user = await currentUser();
+
+  const ctx = await getUserContext(userId);
+  if (!ctx || !hasPermission(ctx.role, "lead:view:own")) {
+    redirect("/");
+  }
+
   const sp = await searchParams;
 
   const page = Math.max(1, Math.floor(Number(sp.page) || 1));
@@ -45,6 +52,9 @@ export default async function DashboardPage({
   const q = (sp.q ?? "").trim().slice(0, 80);
 
   const filters: SQL[] = [];
+  if (ctx.role === "agent" && ctx.agentId) {
+    filters.push(eq(leads.assignedAgentId, ctx.agentId));
+  }
   if (status) filters.push(eq(leads.status, status as LeadStatus));
   if (intent) filters.push(eq(leads.intent, intent as LeadIntent));
   if (q) {
