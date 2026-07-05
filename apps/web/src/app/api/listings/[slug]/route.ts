@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { eq, sql } from "drizzle-orm";
 import { db, listings } from "@realtor/db";
-import { listingStatusUpdateSchema } from "@realtor/domain";
+import { canTransitionStatus, listingStatusUpdateSchema } from "@realtor/domain";
 import { getPublishedListingBySlug } from "@/lib/listings";
 import { getUserContext, isListingOwner } from "@/lib/auth";
 
@@ -37,7 +37,7 @@ export async function PATCH(
   const { slug } = await params;
 
   const [target] = await db
-    .select({ id: listings.id, agentId: listings.agentId })
+    .select({ id: listings.id, agentId: listings.agentId, status: listings.status, listingType: listings.listingType })
     .from(listings)
     .where(eq(listings.slug, slug))
     .limit(1);
@@ -66,6 +66,14 @@ export async function PATCH(
   }
 
   const nextStatus = parsed.data.status;
+
+  if (!canTransitionStatus(ctx.role, target.status, nextStatus, target.listingType)) {
+    return NextResponse.json(
+      { error: `Cannot transition from "${target.status}" to "${nextStatus}"` },
+      { status: 422 }
+    );
+  }
+
   const publishedAt = nextStatus === "published" ? sql`now()` : undefined;
 
   try {
