@@ -32,7 +32,7 @@ Premium real estate platform for Spanish-speaking markets — property listings,
 | Styling | Tailwind CSS | 3.4 |
 | Auth | Clerk | 7.5.3 |
 | ORM | Drizzle | 0.45.x |
-| Database | Supabase (Postgres) | — |
+| Database | Neon (Postgres) | — |
 | Media upload | UploadThing | v7 |
 | Monorepo | Turborepo + npm workspaces | — |
 | Runtime | Node 24.16.0 | (`.nvmrc`) |
