@@ -1,8 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { type Locale, type Messages, getMessages, es } from "@realtor/i18n";
-
-const LOCALE_KEY = "realtor-locale";
+import { type Locale, type Messages, getMessages, es, LOCALE_COOKIE } from "@realtor/i18n";
 
 type LocaleContextValue = {
   locale: Locale;
@@ -21,7 +19,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<Messages>(es);
 
   useEffect(() => {
-    AsyncStorage.getItem(LOCALE_KEY).then((stored) => {
+    AsyncStorage.getItem(LOCALE_COOKIE).then((stored) => {
       if (stored === "en" || stored === "es") {
         setLocaleState(stored);
         setMessages(getMessages(stored));
@@ -32,7 +30,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
     setMessages(getMessages(next));
-    AsyncStorage.setItem(LOCALE_KEY, next);
+    AsyncStorage.setItem(LOCALE_COOKIE, next);
   }, []);
 
   return (

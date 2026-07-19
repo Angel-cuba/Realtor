@@ -185,6 +185,34 @@ export type Messages = {
     cancel: string;
     createListingError: string;
     networkError: string;
+    listingsEmpty: string;
+    createFirstListing: string;
+    colLocation: string;
+    colActions: string;
+    statusOf: string;
+    photos: string;
+    view: string;
+  };
+  uploader: {
+    confirmDelete: string;
+    deleting: string;
+    deleteError: string;
+    deleteSuccess: string;
+    unexpectedError: string;
+    propertyLabel: string;
+    uploading: string;
+    uploadSuccess: string;
+    dropzoneLabel: string;
+    dropzoneHint: string;
+    dropzoneButton: string;
+    existingPhotos: string;
+    refresh: string;
+    noPhotos: string;
+    deletePhotoOf: string;
+  };
+  meta: {
+    title: string;
+    description: string;
   };
   mobile: {
     buy: string;
