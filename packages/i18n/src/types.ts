@@ -207,6 +207,7 @@ export type Messages = {
     dropzoneButton: string;
     existingPhotos: string;
     refresh: string;
+    noProperties: string;
     noPhotos: string;
     deletePhotoOf: string;
   };
