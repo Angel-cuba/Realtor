@@ -3,12 +3,15 @@ import { auth } from "@clerk/nextjs/server";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { ArrowLeft, UploadCloud } from "lucide-react";
 import { db, listings, propertyMedia } from "@realtor/db";
+import { getMessages } from "@realtor/i18n";
 import { ListingPhotoUploader } from "@/components/listing-photo-uploader";
 import { canManageAllListings, canManageAssignedListings, getUserContext } from "@/lib/auth";
+import { getLocale } from "@/lib/locale";
 
 export default async function DashboardUploadPage() {
   await auth.protect();
-  const { userId } = await auth();
+  const [{ userId }, locale] = await Promise.all([auth(), getLocale()]);
+  const m = getMessages(locale);
   const userContext = userId ? await getUserContext(userId) : null;
   const scopedAgentId = userContext && canManageAssignedListings(userContext) ? userContext.agentId : null;
   const listingWhere = userContext && canManageAllListings(userContext)
@@ -30,10 +33,10 @@ export default async function DashboardUploadPage() {
     : [];
 
   const emptyMessage = !userContext
-    ? "Tu cuenta no tiene un perfil interno asignado. Contacta al administrador."
+    ? m.dashboard.noProfileEmpty
     : listingWhere
       ? undefined
-      : "Tu rol actual no permite administrar fotos de propiedades.";
+      : m.dashboard.noRoleEmpty;
 
   const listingIds = publishedListings.map((listing) => listing.id);
   const photos =
@@ -69,10 +72,10 @@ export default async function DashboardUploadPage() {
           <div>
             <Link className="inline-flex items-center gap-2 text-sm font-medium text-black/55" href="/dashboard">
               <ArrowLeft size={16} aria-hidden />
-              Dashboard
+              {m.dashboard.kicker}
             </Link>
-            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-gold">Fotos de propiedades</p>
-            <h1 className="mt-2 text-3xl font-semibold">Subir fotos para listings publicados</h1>
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-gold">{m.dashboard.uploadKicker}</p>
+            <h1 className="mt-2 text-3xl font-semibold">{m.dashboard.uploadHeading}</h1>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded bg-ink text-gold">
             <UploadCloud size={22} aria-hidden />

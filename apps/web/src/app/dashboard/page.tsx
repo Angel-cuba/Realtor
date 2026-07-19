@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Building2, UploadCloud } from "lucide-react";
 import { db, leads } from "@realtor/db";
 import { hasPermission, leadIntents, leadStatuses, type LeadIntent, type LeadStatus } from "@realtor/domain";
+import { getMessages, t } from "@realtor/i18n";
 import { LeadsFilter } from "@/components/leads-filter";
 import { LeadsTable } from "@/components/leads-table";
 import { getUserContext } from "@/lib/auth";
+import { getLocale } from "@/lib/locale";
 
 const PAGE_SIZE = 10;
 
@@ -37,7 +39,8 @@ export default async function DashboardPage({
   searchParams: Promise<{ page?: string; status?: string; intent?: string; q?: string }>;
 }) {
   const { userId } = await auth.protect();
-  const user = await currentUser();
+  const [user, locale] = await Promise.all([currentUser(), getLocale()]);
+  const m = getMessages(locale);
 
   const ctx = await getUserContext(userId);
   if (!ctx || !hasPermission(ctx.role, "lead:view:own")) {
@@ -110,9 +113,9 @@ export default async function DashboardPage({
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-1 border-b border-black/10 pb-8 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">Dashboard</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">{m.dashboard.kicker}</p>
             <h1 className="mt-2 font-display text-3xl font-medium tracking-tight">
-              {user?.firstName ? `Hola, ${user.firstName}` : "Panel de agente"}
+              {user?.firstName ? t(m.dashboard.greetingWithName, { name: user.firstName }) : m.dashboard.greetingFallback}
             </h1>
           </div>
           <div className="flex gap-2">
@@ -121,38 +124,40 @@ export default async function DashboardPage({
               href="/dashboard/listings"
             >
               <Building2 size={17} aria-hidden />
-              Propiedades
+              {m.dashboard.propertiesLink}
             </Link>
             <Link
               className="inline-flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               href="/dashboard/upload"
             >
               <UploadCloud size={17} aria-hidden />
-              Subir fotos
+              {m.dashboard.uploadPhotosLink}
             </Link>
           </div>
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded bg-white p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/55">Total leads</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/55">{m.dashboard.totalLeads}</p>
             <p className="mt-2 font-display text-4xl font-medium tracking-tight">{total}</p>
           </div>
           <div className="rounded bg-white p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/55">Nuevos</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/55">{m.dashboard.newLeads}</p>
             <p className="mt-2 font-display text-4xl font-medium tracking-tight">{newCount}</p>
           </div>
           <div className="rounded bg-white p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/55">Calificados / Tour</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/55">{m.dashboard.qualifiedTours}</p>
             <p className="mt-2 font-display text-4xl font-medium tracking-tight">{qualifiedCount}</p>
           </div>
         </div>
 
         <div className="mt-8 overflow-hidden rounded bg-white">
           <div className="flex items-center justify-between border-b border-black/10 px-6 py-4">
-            <h2 className="font-semibold">Leads</h2>
+            <h2 className="font-semibold">{m.dashboard.leadsHeading}</h2>
             <span className="text-xs text-black/55">
-              {hasActiveFilters ? `${filtered} de ${total}` : `${total} totales`}
+              {hasActiveFilters
+                ? t(m.dashboard.filteredOfTotal, { filtered, total })
+                : t(m.dashboard.totalCount, { total })}
             </span>
           </div>
           <LeadsFilter defaultStatus={status} defaultIntent={intent} defaultQ={q} />
