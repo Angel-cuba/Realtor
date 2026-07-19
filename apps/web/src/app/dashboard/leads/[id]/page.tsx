@@ -5,12 +5,14 @@ import { desc, eq } from "drizzle-orm";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { db, leadNotes, leads, listings as listingsTable } from "@realtor/db";
 import { leadIntentLabel, leadStatusLabel } from "@realtor/domain";
+import { getMessages, t, type Locale } from "@realtor/i18n";
 import { LeadNotesForm } from "@/components/lead-notes-form";
 import { leadStatusClass } from "@/components/lead-status-pill";
 import { getAgentForClerkUser } from "@/lib/agent";
+import { getLocale } from "@/lib/locale";
 
-function formatDate(d: Date | string) {
-  return new Date(d).toLocaleString("es", {
+function formatDate(d: Date | string, locale: Locale) {
+  return new Date(d).toLocaleString(locale === "en" ? "en-US" : "es", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -21,10 +23,11 @@ function formatDate(d: Date | string) {
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await auth.protect();
-  const { userId } = await auth();
+  const [{ userId }, locale] = await Promise.all([auth(), getLocale()]);
   if (!userId) notFound();
   const agentProfile = await getAgentForClerkUser(userId);
   if (!agentProfile) notFound();
+  const m = getMessages(locale);
 
   const { id } = await params;
 
@@ -53,16 +56,16 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           className="inline-flex items-center gap-1.5 text-sm font-medium text-black/55 transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
         >
           <ArrowLeft size={15} aria-hidden />
-          Volver a leads
+          {m.dashboard.backToLeads}
         </Link>
 
         <div className="mt-4 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <article className="rounded bg-white p-6 md:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4 border-b border-black/10 pb-6">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">Lead</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold">{m.dashboard.leadKicker}</p>
                 <h1 className="mt-2 font-display text-3xl font-medium tracking-tight">{lead.name}</h1>
-                <p className="mt-1 text-sm text-black/55">Recibido el {formatDate(lead.createdAt)}</p>
+                <p className="mt-1 text-sm text-black/55">{t(m.dashboard.receivedAt, { date: formatDate(lead.createdAt, locale) })}</p>
               </div>
               <span className={`inline-flex rounded px-3 py-1.5 text-xs font-semibold ${leadStatusClass(lead.status)}`}>
                 {leadStatusLabel(lead.status)}
@@ -70,13 +73,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Info icon={<Mail size={15} aria-hidden />} label="Email" value={lead.email} />
-              {lead.phone ? <Info icon={<Phone size={15} aria-hidden />} label="Telefono" value={lead.phone} /> : null}
-              <Info label="Intencion" value={leadIntentLabel(lead.intent)} />
-              <Info label="Score" value={String(lead.score)} />
+              <Info icon={<Mail size={15} aria-hidden />} label={m.dashboard.email} value={lead.email} />
+              {lead.phone ? <Info icon={<Phone size={15} aria-hidden />} label={m.dashboard.phone} value={lead.phone} /> : null}
+              <Info label={m.dashboard.intent} value={leadIntentLabel(lead.intent)} />
+              <Info label={m.dashboard.score} value={String(lead.score)} />
               {linkedListing ? (
                 <div className="sm:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">Propiedad</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">{m.dashboard.property}</p>
                   <Link
                     href={`/propiedades/${linkedListing.slug}`}
                     target="_blank"
@@ -89,30 +92,30 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             </dl>
 
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">Mensaje</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/55">{m.dashboard.message}</p>
               <p className="mt-2 whitespace-pre-wrap rounded bg-linen p-4 text-sm leading-6 text-black/75">{lead.message}</p>
             </div>
           </article>
 
           <aside className="grid gap-6">
             <section className="rounded bg-white p-6">
-              <h2 className="font-display text-xl font-medium tracking-tight">Notas</h2>
-              <p className="mt-1 text-xs text-black/55">Registra llamadas, recordatorios y proximos pasos.</p>
+              <h2 className="font-display text-xl font-medium tracking-tight">{m.dashboard.notesHeading}</h2>
+              <p className="mt-1 text-xs text-black/55">{m.dashboard.notesCopy}</p>
               <div className="mt-4">
                 <LeadNotesForm leadId={lead.id} />
               </div>
             </section>
 
             <section className="rounded bg-white p-6">
-              <h2 className="font-display text-xl font-medium tracking-tight">Historial</h2>
+              <h2 className="font-display text-xl font-medium tracking-tight">{m.dashboard.historyHeading}</h2>
               {notes.length === 0 ? (
-                <p className="mt-3 text-sm text-black/55">Aun no hay notas registradas.</p>
+                <p className="mt-3 text-sm text-black/55">{m.dashboard.noNotes}</p>
               ) : (
                 <ol className="mt-4 grid gap-3">
                   {notes.map((note) => (
                     <li key={note.id} className="rounded border border-black/10 p-4">
                       <p className="text-xs text-black/55">
-                        <span className="font-semibold text-black/75">{note.authorName}</span> · {formatDate(note.createdAt)}
+                        <span className="font-semibold text-black/75">{note.authorName}</span> · {formatDate(note.createdAt, locale)}
                       </p>
                       <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{note.body}</p>
                     </li>
