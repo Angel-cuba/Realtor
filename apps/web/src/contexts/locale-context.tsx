@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState } from "react";
+import { useRouter } from "next/navigation";
 import { type Locale, type Messages, getMessages, LOCALE_COOKIE } from "@realtor/i18n";
 
 type LocaleContextValue = {
@@ -20,6 +21,7 @@ export function LocaleProvider({
   initialMessages: Messages;
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
   const [messages, setMessages] = useState<Messages>(initialMessages);
 
@@ -28,7 +30,10 @@ export function LocaleProvider({
     setMessages(getMessages(next));
     document.cookie = `${LOCALE_COOKIE}=${next};path=/;max-age=31536000;samesite=lax`;
     document.documentElement.lang = next;
-  }, []);
+    // Server Components read the locale cookie in getLocale(); refresh so
+    // they re-render in the new language without a full navigation.
+    router.refresh();
+  }, [router]);
 
   return (
     <LocaleContext.Provider value={{ locale, messages, setLocale }}>
