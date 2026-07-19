@@ -346,5 +346,6 @@ export type Messages = {
     saveProperty: string;
     unsaveProperty: string;
     saving: string;
+    accountFallback: string;
   };
 };
