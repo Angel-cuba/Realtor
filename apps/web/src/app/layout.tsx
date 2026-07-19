@@ -22,11 +22,15 @@ const geist = Geist({
   display: "swap"
 });
 
-export const metadata: Metadata = {
-  title: "Realtor Platform | Buy, sell, and rent premium homes",
-  description: "A premium real estate platform for homes, apartments, villas, rentals, and owner leads.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000")
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const m = getMessages(locale);
+  return {
+    title: m.meta.title,
+    description: m.meta.description,
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000")
+  };
+}
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();

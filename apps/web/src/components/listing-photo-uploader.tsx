@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, ImageIcon, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { t } from "@realtor/i18n";
+import { useLocale } from "@/contexts/locale-context";
 import { UploadDropzone } from "@/lib/uploadthing-client";
 
 type ListingPhoto = {
@@ -31,6 +33,8 @@ type StatusMessage = {
 
 export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
   const router = useRouter();
+  const { messages: m } = useLocale();
+  const u = m.uploader;
   const [selectedListingId, setSelectedListingId] = useState(listings[0]?.id ?? "");
   const [message, setMessage] = useState<StatusMessage | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -48,22 +52,22 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
   );
 
   async function handleDelete(photoId: string) {
-    if (!window.confirm("Eliminar esta foto de la propiedad?")) return;
+    if (!window.confirm(u.confirmDelete)) return;
 
     setDeletingIds((prev) => new Set(prev).add(photoId));
-    setMessage({ text: "Eliminando foto...", type: "info" });
+    setMessage({ text: u.deleting, type: "info" });
 
     try {
       const res = await fetch(`/api/media/${photoId}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Error al eliminar la foto");
+        throw new Error(body.error ?? u.deleteError);
       }
       setDeletedIds((prev) => new Set(prev).add(photoId));
-      setMessage({ text: "Foto eliminada correctamente.", type: "success" });
+      setMessage({ text: u.deleteSuccess, type: "success" });
       router.refresh();
     } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : "Error inesperado", type: "error" });
+      setMessage({ text: err instanceof Error ? err.message : u.unexpectedError, type: "error" });
     } finally {
       setDeletingIds((prev) => {
         const next = new Set(prev);
@@ -76,7 +80,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
   if (listings.length === 0) {
     return (
       <div className="rounded bg-white p-6 text-center text-black/45">
-        {emptyMessage ?? "No hay propiedades publicadas disponibles para subir fotos."}
+        {emptyMessage ?? u.noPhotos}
       </div>
     );
   }
@@ -85,7 +89,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
     <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
       <section className="rounded bg-white p-5">
         <label className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45" htmlFor="listingId">
-          Propiedad
+          {u.propertyLabel}
         </label>
         <select
           id="listingId"
@@ -122,7 +126,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
           onUploadBegin={() => {
             setUploading(true);
             setUploadProgress(0);
-            setMessage({ text: "Subiendo fotos...", type: "info" });
+            setMessage({ text: u.uploading, type: "info" });
           }}
           onUploadProgress={(progress) => {
             setUploadProgress(progress);
@@ -130,7 +134,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
           onClientUploadComplete={() => {
             setUploading(false);
             setUploadProgress(null);
-            setMessage({ text: "Fotos subidas correctamente.", type: "success" });
+            setMessage({ text: u.uploadSuccess, type: "success" });
             router.refresh();
           }}
           onUploadError={(error) => {
@@ -146,9 +150,9 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
             button: "bg-ink text-white hover:bg-black"
           }}
           content={{
-            label: "Arrastra fotos o selecciona archivos",
-            allowedContent: "Imagenes hasta 8MB, maximo 10 por carga",
-            button: "Subir fotos"
+            label: u.dropzoneLabel,
+            allowedContent: u.dropzoneHint,
+            button: u.dropzoneButton
           }}
         />
         {uploading && uploadProgress !== null && (
@@ -177,7 +181,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
       <section className="rounded bg-white p-5 lg:col-span-2">
         <div className="flex items-center justify-between gap-3 border-b border-black/10 pb-4">
           <h2 className="font-semibold">
-            Fotos existentes
+            {u.existingPhotos}
             {visiblePhotos.length > 0 && (
               <span className="ml-2 text-xs font-normal text-black/45">
                 ({visiblePhotos.length})
@@ -190,7 +194,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
             onClick={() => router.refresh()}
           >
             <RefreshCw size={15} aria-hidden />
-            Actualizar
+            {u.refresh}
           </button>
         </div>
 
@@ -216,7 +220,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
                       <p className="truncate text-xs text-black/55">{photo.alt}</p>
                       <button
                         type="button"
-                        aria-label={`Eliminar foto ${photo.alt}`}
+                        aria-label={t(u.deletePhotoOf, { alt: photo.alt })}
                         onClick={() => handleDelete(photo.id)}
                         disabled={isDeleting || uploading}
                         className="shrink-0 rounded p-1 text-black/35 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
@@ -231,7 +235,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
         ) : (
           <div className="mt-5 flex min-h-40 flex-col items-center justify-center gap-2 rounded bg-linen text-black/45">
             <ImageIcon size={28} aria-hidden />
-            <p className="text-sm">Esta propiedad aun no tiene fotos reales.</p>
+            <p className="text-sm">{u.noPhotos}</p>
           </div>
         )}
       </section>

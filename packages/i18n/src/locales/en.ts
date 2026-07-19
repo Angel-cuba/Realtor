@@ -184,7 +184,35 @@ export const en: Messages = {
     createListing: "Create property",
     cancel: "Cancel",
     createListingError: "Could not create the property.",
-    networkError: "Network error. Please try again."
+    networkError: "Network error. Please try again.",
+    listingsEmpty: "You don't have any published properties yet.",
+    createFirstListing: "Create first property",
+    colLocation: "Location",
+    colActions: "Actions",
+    statusOf: "Status for {title}",
+    photos: "Photos",
+    view: "View"
+  },
+  uploader: {
+    confirmDelete: "Delete this photo from the property?",
+    deleting: "Deleting photo...",
+    deleteError: "Failed to delete the photo",
+    deleteSuccess: "Photo deleted successfully.",
+    unexpectedError: "Unexpected error",
+    propertyLabel: "Property",
+    uploading: "Uploading photos...",
+    uploadSuccess: "Photos uploaded successfully.",
+    dropzoneLabel: "Drag photos or select files",
+    dropzoneHint: "Images up to 8MB, up to 10 per upload",
+    dropzoneButton: "Upload photos",
+    existingPhotos: "Existing photos",
+    refresh: "Refresh",
+    noPhotos: "This property has no real photos yet.",
+    deletePhotoOf: "Delete photo {alt}"
+  },
+  meta: {
+    title: "Realtor Platform | Buy, sell, and rent premium homes",
+    description: "A premium real estate platform for homes, apartments, villas, rentals, and owner leads."
   },
   mobile: {
     buy: "Buy",
