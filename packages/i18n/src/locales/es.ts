@@ -207,6 +207,7 @@ export const es: Messages = {
     dropzoneButton: "Subir fotos",
     existingPhotos: "Fotos existentes",
     refresh: "Actualizar",
+    noProperties: "No hay propiedades publicadas disponibles para subir fotos.",
     noPhotos: "Esta propiedad aun no tiene fotos reales.",
     deletePhotoOf: "Eliminar foto {alt}"
   },
