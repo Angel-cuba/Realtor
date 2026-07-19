@@ -29,7 +29,7 @@ export default function ProfileScreen() {
   const { locale, messages: m, setLocale } = useLocale();
   const [savedListings, setSavedListings] = useState<PropertyListing[]>([]);
   const [savedLoading, setSavedLoading] = useState(false);
-  const displayName = user?.fullName ?? user?.emailAddresses?.[0]?.emailAddress ?? "Cuenta Realtor";
+  const displayName = user?.fullName ?? user?.emailAddresses?.[0]?.emailAddress ?? m.mobile.accountFallback;
   const stats = [
     { label: m.mobile.savedStat, value: savedLoading ? "-" : String(savedListings.length) },
     { label: m.mobile.toursStat, value: "3" },

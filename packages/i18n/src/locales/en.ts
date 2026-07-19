@@ -345,6 +345,7 @@ export const en: Messages = {
     advisorCopy: "Ready to coordinate visits and review comparables.",
     saveProperty: "Save",
     unsaveProperty: "Saved",
-    saving: "Saving..."
+    saving: "Saving...",
+    accountFallback: "Realtor account"
   }
 };
