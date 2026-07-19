@@ -80,7 +80,7 @@ export function ListingPhotoUploader({ listings, emptyMessage }: Props) {
   if (listings.length === 0) {
     return (
       <div className="rounded bg-white p-6 text-center text-black/45">
-        {emptyMessage ?? u.noPhotos}
+        {emptyMessage ?? u.noProperties}
       </div>
     );
   }
