@@ -184,7 +184,35 @@ export const es: Messages = {
     createListing: "Crear propiedad",
     cancel: "Cancelar",
     createListingError: "No se pudo crear la propiedad.",
-    networkError: "Error de red. Intenta de nuevo."
+    networkError: "Error de red. Intenta de nuevo.",
+    listingsEmpty: "Aun no tienes propiedades publicadas.",
+    createFirstListing: "Crear primera propiedad",
+    colLocation: "Ubicacion",
+    colActions: "Acciones",
+    statusOf: "Estado de {title}",
+    photos: "Fotos",
+    view: "Ver"
+  },
+  uploader: {
+    confirmDelete: "Eliminar esta foto de la propiedad?",
+    deleting: "Eliminando foto...",
+    deleteError: "Error al eliminar la foto",
+    deleteSuccess: "Foto eliminada correctamente.",
+    unexpectedError: "Error inesperado",
+    propertyLabel: "Propiedad",
+    uploading: "Subiendo fotos...",
+    uploadSuccess: "Fotos subidas correctamente.",
+    dropzoneLabel: "Arrastra fotos o selecciona archivos",
+    dropzoneHint: "Imagenes hasta 8MB, maximo 10 por carga",
+    dropzoneButton: "Subir fotos",
+    existingPhotos: "Fotos existentes",
+    refresh: "Actualizar",
+    noPhotos: "Esta propiedad aun no tiene fotos reales.",
+    deletePhotoOf: "Eliminar foto {alt}"
+  },
+  meta: {
+    title: "Realtor Platform | Compra, vende y renta casas premium",
+    description: "Una plataforma inmobiliaria premium para casas, apartamentos, villas, rentas y leads de propietarios."
   },
   mobile: {
     buy: "Comprar",
